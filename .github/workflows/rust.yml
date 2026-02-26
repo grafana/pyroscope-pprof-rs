@@ -2,6 +2,9 @@ on: [push, pull_request]
 
 name: build
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
@@ -13,39 +16,30 @@ jobs:
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1.0.7
+        uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9
         with:
-          profile: minimal
-          toolchain: 1.74.0
-          override: true
+          toolchain: "1.74.0"
           components: rustfmt, clippy
 
       - name: Install protobuf compiler
         run: sudo apt-get install -y protobuf-compiler
 
       - name: Run cargo fmt
-        uses: actions-rs/cargo@v1.0.3
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all -- --check
 
       - name: Remove pre-generated prost files to force regeneration
         run: rm proto/*.rs
 
       - name: Run cargo clippy prost
-        uses: actions-rs/cargo@v1.0.3
-        with:
-          command: clippy
-          args: --all-targets --features flamegraph,prost-codec -- -D warnings
+        run: cargo clippy --all-targets --features flamegraph,prost-codec -- -D warnings
 
       - name: Run cargo clippy protobuf
-        uses: actions-rs/cargo@v1.0.3
-        with:
-          command: clippy
-          args: --all-targets --features flamegraph,protobuf-codec -- -D warnings
+        run: cargo clippy --all-targets --features flamegraph,protobuf-codec -- -D warnings
 
       - name: Check if the prost file committed to git is up-to-date
         run: |
@@ -81,34 +75,25 @@ jobs:
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1.0.7
+        uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9
         with:
-          profile: minimal
           toolchain: ${{ matrix.toolchain }}
           target: ${{ matrix.target }}
-          override: true
 
       - name: Run cargo build prost
-        uses: actions-rs/cargo@v1.0.3
-        with:
-          command: build
-          args: --features flamegraph,prost-codec --target ${{ matrix.target }}
+        run: cargo build --features flamegraph,prost-codec --target ${{ matrix.target }}
 
       - name: Run cargo build protobuf
-        uses: actions-rs/cargo@v1.0.3
-        with:
-          command: build
-          args: --features flamegraph,protobuf-codec --target ${{ matrix.target }}
+        run: cargo build --features flamegraph,protobuf-codec --target ${{ matrix.target }}
 
       - name: Run cargo build frame pointer
         if: ${{ matrix.toolchain == 'nightly' && matrix.os == 'ubuntu-latest' }}
-        uses: actions-rs/cargo@v1.0.3
-        with:
-          command: build
-          args: --no-default-features --features frame-pointer --target ${{ matrix.target }}
+        run: cargo build --no-default-features --features frame-pointer --target ${{ matrix.target }}
 
   test:
     name: Test
@@ -134,34 +119,25 @@ jobs:
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1.0.7
+        uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9
         with:
-          profile: minimal
           toolchain: ${{ matrix.toolchain }}
           target: ${{ matrix.target }}
-          override: true
 
       - if: ${{ matrix.target == 'x86_64-unknown-linux-musl' }}
         name: Install musl
         run: sudo apt install musl-tools
 
       - name: Run cargo test prost
-        uses: actions-rs/cargo@v1.0.3
-        with:
-          command: test
-          args: --features flamegraph,prost-codec --target ${{ matrix.target }} -- --test-threads 1
+        run: cargo test --features flamegraph,prost-codec --target ${{ matrix.target }} -- --test-threads 1
 
       - name: Run cargo test protobuf
-        uses: actions-rs/cargo@v1.0.3
-        with:
-          command: test
-          args: --features flamegraph,protobuf-codec --target ${{ matrix.target }} -- --test-threads 1
+        run: cargo test --features flamegraph,protobuf-codec --target ${{ matrix.target }} -- --test-threads 1
 
       - name: Run cargo test framehop
-        uses: actions-rs/cargo@v1.0.3
-        with:
-          command: test
-          args: --features flamegraph,protobuf-codec,framehop-unwinder --target ${{ matrix.target }} -- --test-threads 1
+        run: cargo test --features flamegraph,protobuf-codec,framehop-unwinder --target ${{ matrix.target }} -- --test-threads 1
