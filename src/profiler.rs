@@ -204,6 +204,16 @@ impl ProfilerGuard<'_> {
             self.timer.as_ref().map(Timer::timing).unwrap_or_default(),
         )
     }
+
+    /// Reset accumulated profiling data without stopping the profiler.
+    /// The signal handler and timer continue running — only the sample
+    /// collector is replaced with a fresh one.
+    pub fn reset(&self) -> Result<()> {
+        match self.profiler.write().as_mut() {
+            Err(_) => Err(Error::CreatingError),
+            Ok(profiler) => profiler.reset_data(),
+        }
+    }
 }
 
 impl<'a> Drop for ProfilerGuard<'a> {
@@ -470,6 +480,19 @@ impl Profiler {
         self.running = false;
 
         Ok(())
+    }
+
+    /// Reset the sample data collector without stopping profiling.
+    /// Signal handler and timer remain active — only the accumulated
+    /// samples are discarded.
+    pub fn reset_data(&mut self) -> Result<()> {
+        if self.running {
+            self.sample_counter = 0;
+            self.data = Collector::new().map_err(|_| Error::CreatingError)?;
+            Ok(())
+        } else {
+            Err(Error::NotRunning)
+        }
     }
 
     pub fn stop(&mut self) -> Result<()> {
