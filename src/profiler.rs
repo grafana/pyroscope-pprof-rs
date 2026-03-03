@@ -505,9 +505,13 @@ impl Profiler {
     }
 
     fn unregister_signal_handler(&mut self) -> Result<()> {
-        if let Some(old_action) = self.old_sigaction.take() {
-            unsafe { signal::sigaction(signal::SIGPROF, &old_action) }?;
-        }
+        self.old_sigaction.take();
+        let ignore = signal::SigAction::new(
+            signal::SigHandler::SigIgn,
+            signal::SaFlags::empty(),
+            signal::SigSet::empty(),
+        );
+        unsafe { signal::sigaction(signal::SIGPROF, &ignore) }?;
         Ok(())
     }
 
