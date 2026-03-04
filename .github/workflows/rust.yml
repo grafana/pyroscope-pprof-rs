@@ -27,7 +27,7 @@ jobs:
           components: rustfmt, clippy
 
       - name: Install protobuf compiler
-        run: sudo apt-get install -y protobuf-compiler
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
 
       - name: Run cargo fmt
         run: cargo fmt --all -- --check
@@ -131,7 +131,7 @@ jobs:
 
       - if: ${{ matrix.target == 'x86_64-unknown-linux-musl' }}
         name: Install musl
-        run: sudo apt install musl-tools
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
 
       - name: Run cargo test prost
         run: cargo test --features flamegraph,prost-codec --target ${{ matrix.target }} -- --test-threads 1
