@@ -36,7 +36,6 @@ pub struct ReportBuilder<'a> {
     frames_post_processor: Option<FramesPostProcessor>,
     profiler: &'a RwLock<Result<Profiler>>,
     timing: ReportTiming,
-    reset: bool,
 }
 
 impl<'a> ReportBuilder<'a> {
@@ -45,16 +44,7 @@ impl<'a> ReportBuilder<'a> {
             frames_post_processor: None,
             profiler,
             timing,
-            reset: false,
         }
-    }
-
-    /// Reset the profiler's sample data after building the report.
-    /// Both operations happen under a single write lock, so no samples
-    /// are lost or double-counted between report and reset.
-    pub fn reset_after(&mut self) -> &mut Self {
-        self.reset = true;
-        self
     }
 
     /// Set `frames_post_processor` of a `ReportBuilder`. Before finally building a report, `frames_post_processor`
@@ -107,9 +97,9 @@ impl<'a> ReportBuilder<'a> {
         }
     }
 
-    /// Build a `Report`. If `reset_after()` was called, atomically resets
-    /// the profiler's sample data under the same write lock.
-    pub fn build(&self) -> Result<Report> {
+    /// Build a `Report`. If `reset` is true, atomically resets the
+    /// profiler's sample data under the same write lock.
+    pub fn build(&self, reset: bool) -> Result<Report> {
         let mut hash_map = HashMap::new();
 
         match self.profiler.write().as_mut() {
@@ -142,7 +132,7 @@ impl<'a> ReportBuilder<'a> {
                     }
                 });
 
-                if self.reset {
+                if reset {
                     profiler.reset_data()?;
                 }
 

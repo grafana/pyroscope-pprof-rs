@@ -99,7 +99,7 @@ fn main() {
 
     println!("Prime numbers: {}", v);
 
-    if let Ok(report) = guard.report().build() {
+    if let Ok(report) = guard.report().build(false) {
         let mut file = File::create("profile.pb").unwrap();
         let profile = report.pprof().unwrap();
 

@@ -90,7 +90,7 @@ impl<'a, 'b> Profiler for PProfProfiler<'a, 'b> {
                 Output::Protobuf => {
                     let mut output_file = output_file;
 
-                    let profile = profiler.report().build().unwrap().pprof().unwrap();
+                    let profile = profiler.report().build(false).unwrap().pprof().unwrap();
 
                     let mut content = Vec::new();
                     #[cfg(not(feature = "protobuf-codec"))]

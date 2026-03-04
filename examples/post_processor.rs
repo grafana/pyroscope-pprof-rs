@@ -93,7 +93,7 @@ fn main() {
             .frames_post_processor(|frames| {
                 frames.thread_name = "PROCESSED".to_string();
             })
-            .build()
+            .build(false)
         {
             println!("{:?}", report);
         };

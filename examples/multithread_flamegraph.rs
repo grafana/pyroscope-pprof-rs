@@ -89,7 +89,7 @@ fn main() {
     });
 
     std::thread::sleep(std::time::Duration::from_secs(5));
-    if let Ok(report) = guard.report().build() {
+    if let Ok(report) = guard.report().build(false) {
         let file = File::create("flamegraph.svg").unwrap();
         report.flamegraph(file).unwrap();
 

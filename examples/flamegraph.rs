@@ -97,7 +97,7 @@ fn main() {
 
     println!("Prime numbers: {}", v);
 
-    if let Ok(report) = guard.report().build() {
+    if let Ok(report) = guard.report().build(false) {
         let file = File::create("flamegraph.svg").unwrap();
         report.flamegraph(file).unwrap();
 

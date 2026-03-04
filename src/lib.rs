@@ -16,7 +16,7 @@
 //!
 //! ```rust
 //! # let guard = pprof::ProfilerGuard::new(100).unwrap();
-//!if let Ok(report) = guard.report().build() {
+//!if let Ok(report) = guard.report().build(false) {
 //!    println!("report: {:?}", &report);
 //!};
 //! ```
