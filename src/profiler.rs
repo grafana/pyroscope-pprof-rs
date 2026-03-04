@@ -204,7 +204,6 @@ impl ProfilerGuard<'_> {
             self.timer.as_ref().map(Timer::timing).unwrap_or_default(),
         )
     }
-
 }
 
 impl<'a> Drop for ProfilerGuard<'a> {
@@ -479,7 +478,7 @@ impl Profiler {
     pub fn reset_data(&mut self) -> Result<()> {
         if self.running {
             self.sample_counter = 0;
-            self.data = Collector::new().map_err(|_| Error::CreatingError)?;
+            self.data = Collector::new()?;
             Ok(())
         } else {
             Err(Error::NotRunning)
