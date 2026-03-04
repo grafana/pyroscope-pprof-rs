@@ -465,13 +465,10 @@ mod tests {
 
         let to_cmp = |e: &Entry<T>| EntryCmp { item: e.item, count: e.count };
 
-        let mut actual: Vec<EntryCmp<T>> = match iter {
-            Ok(iter) => iter.map(to_cmp).collect(),
-            Err(e) => {
-                assert!(false, "iterator error: {:?}", e);
-                vec![]
-            }
+        let Ok(iter) = iter else {
+            panic!("iterator error: {:?}", iter.err());
         };
+        let mut actual: Vec<EntryCmp<T>> = iter.map(to_cmp).collect();
         let mut expected: Vec<EntryCmp<T>> = expected.iter().map(to_cmp).collect();
         actual.sort();
         expected.sort();
