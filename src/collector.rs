@@ -184,6 +184,7 @@ impl<T> TempFdArray<T> {
         self.buffer_index = 0;
         self.flush_n = 0;
         self.file.as_file().set_len(0)?;
+        self.file.seek(SeekFrom::Start(0))?;
         Ok(())
     }
 
@@ -501,8 +502,13 @@ mod tests {
         assert_eq!(arr.flush_n, 0);
         assert_entries(arr.try_iter(), vec![]);
 
-        arr.push(Entry { item: 99, count: 5 }).unwrap();
-        assert_entries(arr.try_iter(), vec![Entry { item: 99usize, count: 5 }]);
+        let mut expected_reuse: Vec<Entry<usize>> = Vec::new();
+        for i in 0..=(BUFFER_LENGTH + 10) {
+            arr.push(Entry { item: i, count: 2 }).unwrap();
+            expected_reuse.push(Entry { item: i, count: 2 });
+        }
+        assert!(arr.flush_n > 0);
+        assert_entries(arr.try_iter(), expected_reuse);
     }
 
     #[test]
