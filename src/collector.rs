@@ -455,7 +455,7 @@ mod tests {
     #[cfg(test)]
     fn assert_entries<'a, T: Ord + Copy + Debug + 'a>(
         iter: std::io::Result<impl Iterator<Item = &'a Entry<T>>>,
-        mut expected: Vec<Entry<T>>,
+        expected: Vec<Entry<T>>,
     ) {
         #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
         struct EntryCmp<T> {
