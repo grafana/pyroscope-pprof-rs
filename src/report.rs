@@ -97,9 +97,14 @@ impl<'a> ReportBuilder<'a> {
         }
     }
 
+    /// Build a `Report`.
+    pub fn build(&self) -> Result<Report> {
+        self.build_and_reset(false)
+    }
+
     /// Build a `Report`. If `reset` is true, atomically resets the
     /// profiler's sample data under the same write lock.
-    pub fn build(&self, reset: bool) -> Result<Report> {
+    pub fn build_and_reset(&self, reset: bool) -> Result<Report> {
         let mut hash_map = HashMap::new();
 
         match self.profiler.write().as_mut() {
