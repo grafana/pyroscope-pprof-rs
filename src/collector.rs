@@ -457,17 +457,20 @@ mod tests {
         iter: std::io::Result<impl Iterator<Item = &'a Entry<T>>>,
         mut expected: Vec<Entry<T>>,
     ) {
+        #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+        struct EntryCmp<T> {
+            item: T,
+            count: isize,
+        }
+
+        let to_cmp = |e: &Entry<T>| EntryCmp { item: e.item, count: e.count };
+
         let Ok(iter) = iter else { panic!("iterator error") };
-        let mut actual: Vec<Entry<T>> = iter.map(|e| Entry { item: e.item, count: e.count }).collect();
-        actual.sort_by_key(|e| (e.item, e.count));
+        let mut actual: Vec<EntryCmp<T>> = iter.map(|e| to_cmp(e)).collect();
+        actual.sort();
         expected.sort_by_key(|e| (e.item, e.count));
-        let equal = actual.len() == expected.len()
-            && actual.iter().zip(expected.iter()).all(|(a, b)| a.item == b.item && a.count == b.count);
-        assert!(
-            equal,
-            "entries differ\n  actual:   {:?}\n  expected: {:?}",
-            actual, expected,
-        );
+        let expected: Vec<EntryCmp<T>> = expected.iter().map(|e| to_cmp(e)).collect();
+        assert_eq!(actual, expected);
     }
 
     #[test]
