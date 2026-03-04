@@ -476,7 +476,7 @@ impl Profiler {
     /// Signal handler and timer remain active — only the accumulated
     /// samples are discarded.
     /// NOTE: pyroscope patch — added to support periodic report collection
-    /// without recreating the ProfilerGuard. See https://github.com/grafana/pprof-rs/pull/10
+    /// without recreating the ProfilerGuard. See https://github.com/grafana/pyroscope-rs/issues/399
     pub fn clear(&mut self) -> Result<()> {
         if self.running {
             self.sample_counter = 0;

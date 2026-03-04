@@ -105,7 +105,7 @@ impl<'a> ReportBuilder<'a> {
     /// Build a `Report`. If `clear` is true, atomically clears the
     /// profiler's sample data under the same write lock.
     /// NOTE: pyroscope patch — added to support periodic report collection
-    /// without recreating the ProfilerGuard. See https://github.com/grafana/pprof-rs/pull/10
+    /// without recreating the ProfilerGuard. See https://github.com/grafana/pyroscope-rs/issues/399
     pub fn build_and_clear(&self, clear: bool) -> Result<Report> {
         let mut hash_map = HashMap::new();
 
