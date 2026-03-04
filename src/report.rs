@@ -140,7 +140,7 @@ impl<'a> ReportBuilder<'a> {
                 });
 
                 if reset {
-                    profiler.reset_data()?;
+                    profiler.clear()?;
                 }
 
                 Ok(Report {

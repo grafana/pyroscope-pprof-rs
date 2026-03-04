@@ -33,6 +33,11 @@ fn temp_fd_array_clear() {
     }
     assert!(arr.flush_n > 0, "expected at least one flush to disk");
 
+    // Verify entries before clearing; use the iterator directly (don't collect into
+    // Vec<&_>) since disk-derived references are only valid for the iterator's lifetime.
+    assert_eq!(arr.try_iter().unwrap().count(), BUFFER_LENGTH + 11);
+    assert!(arr.try_iter().unwrap().all(|e| e.count == 1));
+
     arr.clear().unwrap();
 
     assert_eq!(arr.buffer_index, 0);
@@ -62,9 +67,15 @@ fn collector_clear_with_disk_eviction() {
         collector.add(item, 1).unwrap();
     }
 
-    // Sanity check: collector has data
-    let total_before: isize = collector.try_iter().unwrap().map(|e| e.count).sum();
-    assert!(total_before > 0);
+    assert!(collector.flushed_to_disk(), "expected evictions to have flushed data to disk");
+
+    // Verify values before clearing (add_map copies item+count, so no dangling refs)
+    let mut real_map_before = BTreeMap::new();
+    collector.try_iter().unwrap().for_each(|e| {
+        test_utils::add_map(&mut real_map_before, e);
+    });
+    assert_eq!(real_map_before.len(), n);
+    assert!(real_map_before.values().all(|&c| c == 1));
 
     collector.clear().unwrap();
 

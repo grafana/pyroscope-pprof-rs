@@ -292,6 +292,11 @@ impl<T: Hash + Eq + 'static> Collector<T> {
     pub fn try_iter(&self) -> std::io::Result<impl Iterator<Item = &Entry<T>>> {
         Ok(self.map.iter().chain(self.temp_array.try_iter()?))
     }
+
+    #[cfg(test)]
+    pub fn flushed_to_disk(&self) -> bool {
+        self.temp_array.flush_n > 0
+    }
 }
 
 #[cfg(test)]

@@ -472,12 +472,12 @@ impl Profiler {
         Ok(())
     }
 
-    /// Reset the sample data collector without stopping profiling.
+    /// Clear the sample data collector without stopping profiling.
     /// Signal handler and timer remain active — only the accumulated
     /// samples are discarded.
     /// NOTE: pyroscope patch — added to support periodic report collection
     /// without recreating the ProfilerGuard. See https://github.com/grafana/pprof-rs/pull/10
-    pub fn reset_data(&mut self) -> Result<()> {
+    pub fn clear(&mut self) -> Result<()> {
         if self.running {
             self.sample_counter = 0;
             self.data.clear()?;
