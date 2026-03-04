@@ -480,7 +480,7 @@ impl Profiler {
     pub fn reset_data(&mut self) -> Result<()> {
         if self.running {
             self.sample_counter = 0;
-            self.data = Collector::new()?;
+            self.data.clear()?;
             Ok(())
         } else {
             Err(Error::NotRunning)

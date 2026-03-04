@@ -45,6 +45,10 @@ impl<T: Eq + Default> Default for Bucket<T> {
 }
 
 impl<T: Eq> Bucket<T> {
+    pub fn clear(&mut self) {
+        self.length = 0;
+    }
+
     pub fn add(&mut self, key: T, count: isize) -> Option<Entry<T>> {
         let mut done = false;
         self.entries[0..self.length].iter_mut().for_each(|ele| {
@@ -121,6 +125,12 @@ impl<T: Hash + Eq + Default + Debug> Default for HashCounter<T> {
 }
 
 impl<T: Hash + Eq> HashCounter<T> {
+    pub fn clear(&mut self) {
+        for bucket in self.buckets.iter_mut() {
+            bucket.clear();
+        }
+    }
+
     fn hash(key: &T) -> u64 {
         let mut s = DefaultHasher::new();
         key.hash(&mut s);
@@ -170,6 +180,13 @@ impl<T: Default + Debug> TempFdArray<T> {
 }
 
 impl<T> TempFdArray<T> {
+    fn clear(&mut self) -> std::io::Result<()> {
+        self.buffer_index = 0;
+        self.flush_n = 0;
+        self.file.as_file().set_len(0)?;
+        Ok(())
+    }
+
     fn flush_buffer(&mut self) -> std::io::Result<()> {
         self.buffer_index = 0;
         let buf = unsafe {
@@ -258,6 +275,12 @@ impl<T: Hash + Eq + Default + Debug + 'static> Collector<T> {
 }
 
 impl<T: Hash + Eq + 'static> Collector<T> {
+    pub fn clear(&mut self) -> std::io::Result<()> {
+        self.map.clear();
+        self.temp_array.clear()?;
+        Ok(())
+    }
+
     pub fn add(&mut self, key: T, count: isize) -> std::io::Result<()> {
         if let Some(evict) = self.map.add(key, count) {
             self.temp_array.push(evict)?;
