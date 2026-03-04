@@ -36,6 +36,7 @@ pub struct ReportBuilder<'a> {
     frames_post_processor: Option<FramesPostProcessor>,
     profiler: &'a RwLock<Result<Profiler>>,
     timing: ReportTiming,
+    reset: bool,
 }
 
 impl<'a> ReportBuilder<'a> {
@@ -44,7 +45,16 @@ impl<'a> ReportBuilder<'a> {
             frames_post_processor: None,
             profiler,
             timing,
+            reset: false,
         }
+    }
+
+    /// Reset the profiler's sample data after building the report.
+    /// Both operations happen under a single write lock, so no samples
+    /// are lost or double-counted between report and reset.
+    pub fn reset_after(&mut self) -> &mut Self {
+        self.reset = true;
+        self
     }
 
     /// Set `frames_post_processor` of a `ReportBuilder`. Before finally building a report, `frames_post_processor`
@@ -97,7 +107,8 @@ impl<'a> ReportBuilder<'a> {
         }
     }
 
-    /// Build a `Report`.
+    /// Build a `Report`. If `reset_after()` was called, atomically resets
+    /// the profiler's sample data under the same write lock.
     pub fn build(&self) -> Result<Report> {
         let mut hash_map = HashMap::new();
 
@@ -131,51 +142,9 @@ impl<'a> ReportBuilder<'a> {
                     }
                 });
 
-                Ok(Report {
-                    data: hash_map,
-                    timing: self.timing.clone(),
-                })
-            }
-        }
-    }
-
-    /// Build a `Report` and atomically reset the profiler's sample data.
-    /// Both operations happen under a single write lock, so no samples
-    /// are lost or double-counted between report and reset.
-    pub fn build_and_reset(&self) -> Result<Report> {
-        let mut hash_map = HashMap::new();
-
-        match self.profiler.write().as_mut() {
-            Err(err) => {
-                log::error!("Error in creating profiler: {}", err);
-                Err(Error::CreatingError)
-            }
-            Ok(profiler) => {
-                profiler.data.try_iter()?.for_each(|entry| {
-                    let count = entry.count;
-                    if count > 0 {
-                        let mut key = Frames::from(entry.item.clone());
-                        if let Some(processor) = &self.frames_post_processor {
-                            processor(&mut key);
-                        }
-
-                        match hash_map.get_mut(&key) {
-                            Some(value) => {
-                                *value += count;
-                            }
-                            None => {
-                                match hash_map.insert(key, count) {
-                                    None => {}
-                                    Some(_) => {
-                                        unreachable!();
-                                    }
-                                };
-                            }
-                        }
-                    }
-                });
-
-                profiler.reset_data()?;
+                if self.reset {
+                    profiler.reset_data()?;
+                }
 
                 Ok(Report {
                     data: hash_map,
