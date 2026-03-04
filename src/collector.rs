@@ -474,16 +474,15 @@ mod tests {
     #[test]
     fn temp_fd_array_clear() {
         let mut arr = TempFdArray::<Entry<usize>>::new().unwrap();
+        let mut expected: Vec<(usize, isize)> = Vec::new();
 
         for i in 0..=(BUFFER_LENGTH + 10) {
             arr.push(Entry { item: i, count: 1 }).unwrap();
+            expected.push((i, 1));
         }
         assert!(arr.flush_n > 0, "expected at least one flush to disk");
 
-        assert_eq!(
-            collect_sorted(arr.try_iter().unwrap()),
-            (0..=(BUFFER_LENGTH + 10)).map(|i| (i, 1isize)).collect::<Vec<_>>()
-        );
+        assert_eq!(collect_sorted(arr.try_iter().unwrap()), expected);
 
         arr.clear().unwrap();
 
@@ -503,27 +502,22 @@ mod tests {
         let mut collector = Collector::<usize>::new().unwrap();
 
         let n = BUCKETS * BUCKETS_ASSOCIATIVITY * 4;
+        let expected_before: Vec<(usize, isize)> = (0..n).map(|i| (i, 1)).collect();
         for item in 0..n {
             collector.add(item, 1).unwrap();
         }
 
         assert!(collector.flushed_to_disk() > 0, "expected evictions to have flushed data to disk");
-
-        assert_eq!(
-            collect_sorted(collector.try_iter().unwrap()),
-            (0..n).map(|i| (i, 1isize)).collect::<Vec<_>>()
-        );
+        assert_eq!(collect_sorted(collector.try_iter().unwrap()), expected_before);
 
         collector.clear().unwrap();
 
         assert_eq!(collect_sorted(collector.try_iter().unwrap()), vec![]);
 
+        let expected_reuse: Vec<(usize, isize)> = (0..10).map(|i| (i, 2)).collect();
         for item in 0..10 {
             collector.add(item, 2).unwrap();
         }
-        assert_eq!(
-            collect_sorted(collector.try_iter().unwrap()),
-            (0..10).map(|i| (i, 2isize)).collect::<Vec<_>>()
-        );
+        assert_eq!(collect_sorted(collector.try_iter().unwrap()), expected_reuse);
     }
 }
