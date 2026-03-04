@@ -512,10 +512,12 @@ mod tests {
         let mut collector = Collector::<usize>::new().unwrap();
 
         let n = BUCKETS * BUCKETS_ASSOCIATIVITY * 4;
-        let expected_before: Vec<Entry<usize>> = (0..n).map(|i| entry(i, 1)).collect();
+        let mut expected_before: Vec<Entry<usize>> = Vec::new();
         for item in 0..n {
             collector.add(item, 1).unwrap();
+            expected_before.push(entry(item, 1));
         }
+        expected_before.sort();
 
         assert!(collector.flushed_to_disk() > 0, "expected evictions to have flushed data to disk");
         assert_eq!(collect_sorted(collector.try_iter().unwrap()), expected_before);
