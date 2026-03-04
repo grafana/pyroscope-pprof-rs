@@ -458,11 +458,16 @@ mod tests {
         mut expected: Vec<Entry<T>>,
     ) {
         let Ok(iter) = iter else { panic!("iterator error") };
-        let mut actual: Vec<(T, isize)> = iter.map(|e| (e.item, e.count)).collect();
-        actual.sort();
+        let mut actual: Vec<Entry<T>> = iter.map(|e| Entry { item: e.item, count: e.count }).collect();
+        actual.sort_by_key(|e| (e.item, e.count));
         expected.sort_by_key(|e| (e.item, e.count));
-        let expected: Vec<(T, isize)> = expected.iter().map(|e| (e.item, e.count)).collect();
-        assert_eq!(actual, expected);
+        let equal = actual.len() == expected.len()
+            && actual.iter().zip(expected.iter()).all(|(a, b)| a.item == b.item && a.count == b.count);
+        assert!(
+            equal,
+            "entries differ\n  actual:   {:?}\n  expected: {:?}",
+            actual, expected,
+        );
     }
 
     #[test]
