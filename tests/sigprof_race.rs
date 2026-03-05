@@ -14,16 +14,15 @@
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
-
-const TEST_DURATION: Duration = Duration::from_secs(30);
 
 #[test]
 fn test_sigprof_race_crash() {
     // Spawn background threads that burn CPU to maximize SIGPROF delivery.
-    // SIGPROF is delivered based on CPU time consumed by the process, so
-    // more threads burning CPU = more frequent signal delivery = higher
-    // chance of hitting the race window during guard drop/recreate.
+    // ITIMER_PROF counts process-wide CPU time. More threads burning CPU
+    // means more total CPU time consumed, which means SIGPROF fires more
+    // frequently. The kernel delivers the signal to whichever thread is
+    // currently running — some of those deliveries will hit the main thread
+    // during the race window.
     let running = Arc::new(AtomicBool::new(true));
     let mut handles = Vec::new();
     for _ in 0..4 {
@@ -35,14 +34,12 @@ fn test_sigprof_race_crash() {
         }));
     }
 
-    // Rapidly cycle the profiler for TEST_DURATION. Each iteration creates
-    // a guard (registers signal handler, starts timer) and drops it (stops
-    // timer, unregisters handler). The main thread burns CPU between cycles
-    // so SIGPROF gets delivered to it (Linux targets the thread consuming
-    // CPU time). The race window is the moment SIG_DFL is restored before
-    // the next iteration re-registers the handler.
-    let deadline = Instant::now() + TEST_DURATION;
-    while Instant::now() < deadline {
+    // Rapidly cycle the profiler. Each iteration creates a guard (registers
+    // signal handler, starts timer) and drops it (stops timer, unregisters
+    // handler). The main thread burns CPU between cycles so SIGPROF can be
+    // delivered to it. The race window is the moment SIG_DFL is restored
+    // before the next iteration re-registers the handler.
+    for _ in 0..8000 {
         let _guard = pprof::ProfilerGuard::new(999).unwrap();
         for _ in 0..50_000 {
             std::hint::black_box(0u64.wrapping_add(1));
