@@ -505,18 +505,9 @@ impl Profiler {
     }
 
     fn unregister_signal_handler(&mut self) -> Result<()> {
-        // Use SIG_IGN instead of restoring SIG_DFL to avoid a race where a
-        // pending SIGPROF delivered between unregister and re-register kills
-        // the process (SIG_DFL for SIGPROF = terminate).
-        // See https://github.com/tikv/pprof-rs/issues/288
-        //     https://github.com/grafana/pprof-rs/pull/8
-        self.old_sigaction.take();
-        let ignore = signal::SigAction::new(
-            signal::SigHandler::SigIgn,
-            signal::SaFlags::empty(),
-            signal::SigSet::empty(),
-        );
-        unsafe { signal::sigaction(signal::SIGPROF, &ignore) }?;
+        if let Some(old_action) = self.old_sigaction.take() {
+            unsafe { signal::sigaction(signal::SIGPROF, &old_action) }?;
+        }
         Ok(())
     }
 

@@ -14,7 +14,7 @@
 
 #[test]
 fn test_sigprof_race_crash() {
-    for _ in 0..500 {
+    for _ in 0..2000 {
         let guard = pprof::ProfilerGuard::new(999).unwrap();
         // Busy-loop to keep CPU time ticking so SIGPROF fires frequently.
         let start = std::time::Instant::now();
