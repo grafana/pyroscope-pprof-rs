@@ -12,17 +12,40 @@
 // Without the fix, this test crashes the process with SIGPROF.
 // With the fix (SIG_IGN instead of SIG_DFL restore), it completes cleanly.
 
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+
 #[test]
 fn test_sigprof_race_crash() {
-    for _ in 0..2000 {
+    // Spawn background threads that burn CPU to maximize SIGPROF delivery.
+    // SIGPROF is delivered based on CPU time consumed by the process, so
+    // more threads burning CPU = more frequent signal delivery = wider
+    // effective race window.
+    let running = Arc::new(AtomicBool::new(true));
+    let mut handles = Vec::new();
+    for _ in 0..4 {
+        let running = running.clone();
+        handles.push(std::thread::spawn(move || {
+            while running.load(Ordering::Relaxed) {
+                std::hint::black_box(0u64.wrapping_add(1));
+            }
+        }));
+    }
+
+    for _ in 0..8000 {
         let guard = pprof::ProfilerGuard::new(999).unwrap();
-        // Busy-loop to keep CPU time ticking so SIGPROF fires frequently.
+        // Minimal busy-loop: just enough to ensure some SIGPROF signals fire,
+        // then drop immediately to cycle through the race window as fast as
+        // possible.
         let start = std::time::Instant::now();
-        while start.elapsed().as_millis() < 2 {
+        while start.elapsed().as_micros() < 500 {
             std::hint::black_box(0u64.wrapping_add(1));
         }
         drop(guard);
-        // No sleep between iterations: the race window is the gap between
-        // drop(timer) and the next register_signal_handler() call.
+    }
+
+    running.store(false, Ordering::Relaxed);
+    for h in handles {
+        let _ = h.join();
     }
 }
