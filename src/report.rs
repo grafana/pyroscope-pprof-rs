@@ -99,6 +99,20 @@ impl<'a> ReportBuilder<'a> {
 
     /// Build a `Report`.
     pub fn build(&self) -> Result<Report> {
+        self.build_and_clear(false)
+    }
+
+    /// Build a `Report`. If `clear` is true, atomically clears the
+    /// profiler's sample data under the same write lock.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::CreatingError`] if the profiler lock is poisoned.
+    /// Returns an I/O error if reading the overflow backing file or clearing the collector fails.
+    ///
+    /// NOTE: pyroscope patch — added to support periodic report collection
+    /// without recreating the ProfilerGuard. See https://github.com/grafana/pyroscope-rs/issues/399
+    pub fn build_and_clear(&self, clear: bool) -> Result<Report> {
         let mut hash_map = HashMap::new();
 
         match self.profiler.write().as_mut() {
@@ -130,6 +144,10 @@ impl<'a> ReportBuilder<'a> {
                         }
                     }
                 });
+
+                if clear {
+                    profiler.clear()?;
+                }
 
                 Ok(Report {
                     data: hash_map,

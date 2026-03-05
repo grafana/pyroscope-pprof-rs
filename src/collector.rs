@@ -45,6 +45,10 @@ impl<T: Eq + Default> Default for Bucket<T> {
 }
 
 impl<T: Eq> Bucket<T> {
+    pub fn clear(&mut self) {
+        self.length = 0;
+    }
+
     pub fn add(&mut self, key: T, count: isize) -> Option<Entry<T>> {
         let mut done = false;
         self.entries[0..self.length].iter_mut().for_each(|ele| {
@@ -121,6 +125,12 @@ impl<T: Hash + Eq + Default + Debug> Default for HashCounter<T> {
 }
 
 impl<T: Hash + Eq> HashCounter<T> {
+    pub fn clear(&mut self) {
+        for bucket in self.buckets.iter_mut() {
+            bucket.clear();
+        }
+    }
+
     fn hash(key: &T) -> u64 {
         let mut s = DefaultHasher::new();
         key.hash(&mut s);
@@ -170,6 +180,14 @@ impl<T: Default + Debug> TempFdArray<T> {
 }
 
 impl<T> TempFdArray<T> {
+    fn clear(&mut self) -> std::io::Result<()> {
+        self.buffer_index = 0;
+        self.flush_n = 0;
+        self.file.as_file().set_len(0)?;
+        self.file.seek(SeekFrom::Start(0))?;
+        Ok(())
+    }
+
     fn flush_buffer(&mut self) -> std::io::Result<()> {
         self.buffer_index = 0;
         let buf = unsafe {
@@ -258,6 +276,12 @@ impl<T: Hash + Eq + Default + Debug + 'static> Collector<T> {
 }
 
 impl<T: Hash + Eq + 'static> Collector<T> {
+    pub fn clear(&mut self) -> std::io::Result<()> {
+        self.map.clear();
+        self.temp_array.clear()?;
+        Ok(())
+    }
+
     pub fn add(&mut self, key: T, count: isize) -> std::io::Result<()> {
         if let Some(evict) = self.map.add(key, count) {
             self.temp_array.push(evict)?;
@@ -268,6 +292,11 @@ impl<T: Hash + Eq + 'static> Collector<T> {
 
     pub fn try_iter(&self) -> std::io::Result<impl Iterator<Item = &Entry<T>>> {
         Ok(self.map.iter().chain(self.temp_array.try_iter()?))
+    }
+
+    #[cfg(test)]
+    pub fn flushed_to_disk(&self) -> usize {
+        self.temp_array.flush_n
     }
 }
 
@@ -421,5 +450,115 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[cfg(test)]
+    fn assert_entries<'a, T: Ord + Copy + Debug + 'a>(
+        iter: std::io::Result<impl Iterator<Item = &'a Entry<T>>>,
+        expected: Vec<Entry<T>>,
+    ) {
+        #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+        struct EntryCmp<T> {
+            item: T,
+            count: isize,
+        }
+
+        let to_cmp = |e: &Entry<T>| EntryCmp {
+            item: e.item,
+            count: e.count,
+        };
+
+        assert!(iter.is_ok(), "iterator error: {:?}", iter.err());
+        let Ok(iter) = iter else { return };
+        let mut actual: Vec<EntryCmp<T>> = iter.map(to_cmp).collect();
+        let mut expected: Vec<EntryCmp<T>> = expected.iter().map(to_cmp).collect();
+        actual.sort();
+        expected.sort();
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn hash_counter_clear() {
+        let mut counter = HashCounter::<usize>::default();
+        counter.add(1, 1);
+        counter.add(2, 3);
+
+        assert_entries(
+            Ok(counter.iter()),
+            vec![
+                Entry {
+                    item: 1usize,
+                    count: 1,
+                },
+                Entry { item: 2, count: 3 },
+            ],
+        );
+
+        counter.clear();
+
+        assert_entries(Ok(counter.iter()), vec![]);
+
+        counter.add(42, 7);
+        assert_entries(
+            Ok(counter.iter()),
+            vec![Entry {
+                item: 42usize,
+                count: 7,
+            }],
+        );
+    }
+
+    #[test]
+    fn temp_fd_array_clear() {
+        let mut arr = TempFdArray::<Entry<usize>>::new().unwrap();
+        let mut expected: Vec<Entry<usize>> = Vec::new();
+
+        for i in 0..=(BUFFER_LENGTH + 10) {
+            arr.push(Entry { item: i, count: 1 }).unwrap();
+            expected.push(Entry { item: i, count: 1 });
+        }
+        assert!(arr.flush_n > 0);
+
+        assert_entries(arr.try_iter(), expected);
+
+        arr.clear().unwrap();
+
+        assert_eq!(arr.buffer_index, 0);
+        assert_eq!(arr.flush_n, 0);
+        assert_entries(arr.try_iter(), vec![]);
+
+        let mut expected_reuse: Vec<Entry<usize>> = Vec::new();
+        for i in 0..=(BUFFER_LENGTH + 10) {
+            arr.push(Entry { item: i, count: 2 }).unwrap();
+            expected_reuse.push(Entry { item: i, count: 2 });
+        }
+        assert!(arr.flush_n > 0);
+        assert_entries(arr.try_iter(), expected_reuse);
+    }
+
+    #[test]
+    fn collector_clear_with_disk_eviction() {
+        let mut collector = Collector::<usize>::new().unwrap();
+
+        let n = BUCKETS * BUCKETS_ASSOCIATIVITY * 4;
+        let mut expected_before: Vec<Entry<usize>> = Vec::new();
+        for item in 0..n {
+            collector.add(item, 1).unwrap();
+            expected_before.push(Entry { item, count: 1 });
+        }
+
+        assert!(collector.flushed_to_disk() > 0);
+        assert_entries(collector.try_iter(), expected_before);
+
+        collector.clear().unwrap();
+
+        assert_entries(collector.try_iter(), vec![]);
+
+        let mut expected_reuse: Vec<Entry<usize>> = Vec::new();
+        for item in 0..10 {
+            collector.add(item, 2).unwrap();
+            expected_reuse.push(Entry { item, count: 2 });
+        }
+        assert_entries(collector.try_iter(), expected_reuse);
     }
 }
