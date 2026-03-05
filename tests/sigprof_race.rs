@@ -33,7 +33,7 @@ fn test_sigprof_race_crash() {
     }
 
     for _ in 0..8000 {
-        let guard = pprof::ProfilerGuard::new(999).unwrap();
+        let _guard = pprof::ProfilerGuard::new(999).unwrap();
         // Minimal busy-loop: just enough to ensure some SIGPROF signals fire.
         // guard is dropped at end of iteration, cycling through the race window.
         let start = std::time::Instant::now();
