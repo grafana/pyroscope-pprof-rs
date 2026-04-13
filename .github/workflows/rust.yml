@@ -91,10 +91,6 @@ jobs:
       - name: Run cargo build protobuf
         run: cargo build --features flamegraph,protobuf-codec --target ${{ matrix.target }}
 
-      - name: Run cargo build frame pointer
-        if: ${{ matrix.toolchain == 'nightly' && matrix.os == 'ubuntu-latest' }}
-        run: cargo build --no-default-features --features frame-pointer --target ${{ matrix.target }}
-
   test:
     name: Test
     strategy:
@@ -138,6 +134,3 @@ jobs:
 
       - name: Run cargo test protobuf
         run: cargo test --features flamegraph,protobuf-codec --target ${{ matrix.target }} -- --test-threads 1
-
-      - name: Run cargo test framehop
-        run: cargo test --features flamegraph,protobuf-codec,framehop-unwinder --target ${{ matrix.target }} -- --test-threads 1

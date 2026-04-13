@@ -136,13 +136,12 @@ extern "C" {
 
 }
 
-impl super::Frame for Frame {
-    type S = backtrace::Symbol;
-    fn ip(&self) -> usize {
+impl Frame {
+    pub fn ip(&self) -> usize {
         self.ip
     }
 
-    fn symbol_address(&self) -> *mut c_void {
+    pub fn symbol_address(&self) -> *mut c_void {
         if cfg!(target_os = "macos") || cfg!(target_os = "ios") {
             self.ip as *mut c_void
         } else {
@@ -150,32 +149,24 @@ impl super::Frame for Frame {
         }
     }
 
-    fn resolve_symbol<F: FnMut(&Self::S)>(&self, cb: F) {
+    pub fn resolve_symbol<F: FnMut(&backtrace::Symbol)>(&self, cb: F) {
         backtrace::resolve(self.ip as *mut c_void, cb);
     }
 }
 
 pub struct Trace;
 
-impl super::Trace for Trace {
-    type Frame = Frame;
-
-    fn init() {
+impl Trace {
+    pub fn init() {
         let _ = UNWINDER.read();
     }
 
-    fn trace<F: FnMut(&Self::Frame) -> bool>(ctx: *mut c_void, cb: F)
-    where
-        Self: Sized,
-    {
+    pub fn trace<F: FnMut(&Frame) -> bool>(ctx: *mut c_void, cb: F) {
         // For Linux, this `try_write` should always succeed, because `SIGPROF` will never be delivered to
         // another thread while the signal handler is running. However, I'm not sure about other OSes, so
         // we use `try_write` to be safe instead of using `static mut` and `unsafe` directly.
-        match UNWINDER.try_write() {
-            None => return,
-            Some(mut unwinder) => {
-                unwinder.iter_frames(ctx, cb);
-            }
+        if let Some(mut unwinder) = UNWINDER.try_write() {
+            unwinder.iter_frames(ctx, cb);
         }
     }
 }

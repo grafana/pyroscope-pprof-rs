@@ -38,7 +38,6 @@ FRAME: backtrace::backtrace::trace::h3e91a3123a3049a5 -> FRAME: pprof::profiler:
 - `flamegraph` enables the flamegraph report format.
 - `prost-codec` enables the pprof protobuf report format through `prost`.
 - `protobuf-codec` enables the pprof protobuf report format through `protobuf` crate.
-- `frame-pointer` gets the backtrace through frame pointer. **only available for nightly**
 
 ## Flamegraph
 
@@ -209,25 +208,13 @@ However, the real world is full of thorns. There are many worths of note parts i
 
 ### Backtrace
 
-Unfortunately, there is no 100% robust stack tracing method. [Some related researches](https://github.com/gperftools/gperftools/wiki/gperftools%27-stacktrace-capturing-methods-and-their-issues) have been done by gperftools. `pprof-rs` uses [`backtrace-rs`](https://github.com/rust-lang/backtrace-rs) which finally uses libunwind provided by `libgcc`
+`pprof-rs` uses the [`framehop`](https://github.com/nicktrav/framehop) crate for stack unwinding via DWARF information. This avoids the signal-safety issues of libunwind-based unwinding. Supported platforms: x86_64 and aarch64 on Linux and macOS.
 
-**WARN:** as described in former gperftools documents, libunwind provided by `libgcc` is not signal safe.
-
-> libgcc's unwind method is not safe to use from signal handlers. One particular cause of deadlock is when profiling tick happens when program is propagating thrown exception.
-
-This can be resolved by adding a blocklist:
+You can exclude specific libraries from profiling with a blocklist:
 
 ```rust
 let guard = pprof::ProfilerGuardBuilder::default().frequency(1000).blocklist(&["libc", "libgcc", "pthread", "vdso"]).build().unwrap();
 ```
-
-The `vdso` should also be added to the blocklist, because in some distribution (e.g. ubuntu 18.04), the dwarf information in vdso is incorrect.
-
-### Frame Pointer
-
-The `pprof-rs` also supports unwinding through frame pointer, without the need to use `libunwind`. However, the standard library shipped with the rust compiler does not have the correct frame pointer in every function, so you need to use `cargo +nightly -Z build-std` to build the standard library from source.
-
-As we cannot get the stack boundaries inside the signal handler, it's also not possible to ensure the safety. If the frame pointer was set to a wrong value, the program will panic.
 
 ### Signal Safety
 

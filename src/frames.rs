@@ -10,8 +10,9 @@ use std::time::SystemTime;
 use smallvec::SmallVec;
 use symbolic_demangle::demangle;
 
-use crate::backtrace::{Frame, Trace, TraceImpl};
-use crate::{MAX_DEPTH, MAX_THREAD_NAME};
+use crate::backtrace::Frame;
+use crate::MAX_DEPTH;
+use crate::MAX_THREAD_NAME;
 
 #[cfg(feature = "perfmaps")]
 fn resolve_in_perfmap(ip: usize) -> Option<Symbol> {
@@ -33,7 +34,7 @@ fn resolve_in_perfmap(_ip: usize) -> Option<Symbol> {
 
 #[derive(Clone)]
 pub struct UnresolvedFrames {
-    pub frames: SmallVec<[<TraceImpl as Trace>::Frame; MAX_DEPTH]>,
+    pub frames: SmallVec<[Frame; MAX_DEPTH]>,
     pub thread_name: [u8; MAX_THREAD_NAME],
     pub thread_name_length: usize,
     pub thread_id: u64,
@@ -61,7 +62,7 @@ impl Debug for UnresolvedFrames {
 
 impl UnresolvedFrames {
     pub fn new(
-        frames: SmallVec<[<TraceImpl as Trace>::Frame; MAX_DEPTH]>,
+        frames: SmallVec<[Frame; MAX_DEPTH]>,
         tn: &[u8],
         thread_id: u64,
         sample_timestamp: SystemTime,
@@ -147,16 +148,13 @@ impl Symbol {
 
 unsafe impl Send for Symbol {}
 
-impl<T> From<&T> for Symbol
-where
-    T: crate::backtrace::Symbol,
-{
-    fn from(symbol: &T) -> Self {
+impl From<&backtrace::Symbol> for Symbol {
+    fn from(symbol: &backtrace::Symbol) -> Self {
         Symbol {
-            name: symbol.name(),
+            name: symbol.name().map(|name| name.as_bytes().to_vec()),
             addr: symbol.addr(),
             lineno: symbol.lineno(),
-            filename: symbol.filename(),
+            filename: symbol.filename().map(|f| f.to_owned()),
         }
     }
 }
@@ -209,7 +207,7 @@ impl From<UnresolvedFrames> for Frames {
         while let Some(frame) = frame_iter.next() {
             let mut symbols: Vec<Symbol> = Vec::new();
 
-            if let Some(perfmap_symbol) = resolve_in_perfmap(frame.ip() as usize) {
+            if let Some(perfmap_symbol) = resolve_in_perfmap(frame.ip()) {
                 symbols.push(perfmap_symbol);
             } else {
                 frame.resolve_symbol(|symbol| {
