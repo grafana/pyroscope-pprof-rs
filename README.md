@@ -32,43 +32,6 @@ FRAME: backtrace::backtrace::trace::h3e91a3123a3049a5 -> FRAME: pprof::profiler:
 ```
 
 
-## Features
-
-- `cpp` enables the cpp demangle.
-- `flamegraph` enables the flamegraph report format.
-- `prost-codec` enables the pprof protobuf report format through `prost`.
-- `protobuf-codec` enables the pprof protobuf report format through `protobuf` crate.
-
-## Flamegraph
-
-```toml
-pprof = { version = "0.15", features = ["flamegraph"] }
-```
-
-If `flamegraph` feature is enabled, you can generate flamegraph from the report. `Report` struct has a method `flamegraph` which can generate flamegraph and write it into a `Write`.
-
-```rust
-if let Ok(report) = guard.report().build() {
-    let file = File::create("flamegraph.svg").unwrap();
-    report.flamegraph(file).unwrap();
-};
-```
-
-Additionally, custom flamegraph options can be specified.
-
-```rust
-if let Ok(report) = guard.report().build() {
-    let file = File::create("flamegraph.svg").unwrap();
-    let mut options = pprof::flamegraph::Options::default();
-    options.image_width = Some(2500);
-    report.flamegraph_with_options(file, &mut options).unwrap();
-};
-```
-
-Here is an example of generated flamegraph:
-
-![flamegraph](https://user-images.githubusercontent.com/5244316/68021936-c1265e80-fcdd-11e9-8fa5-62b548bc751d.png)
-
 ## Frame Post Processor
 
 Before the report was generated, `frame_post_processor` was provided as an interface to modify raw statistic data. If you want to group several symbols/thread or demangle for some symbols, this feature will benefit you.
@@ -110,59 +73,9 @@ fn frames_post_processor() -> impl Fn(&mut pprof::Frames) {
 
 ```rust
 if let Ok(report) = guard.frames_post_processor(frames_post_processor()).report().build() {
-    let file = File::create("flamegraph.svg").unwrap();
-    report.flamegraph(file).unwrap();
+    println!("report: {:?}", &report);
 }
 ```
-
-## Use with `pprof`
-
-With `protobuf` feature enabled, `pprof-rs` can also output [`profile.proto`](https://github.com/google/pprof/blob/master/proto/profile.proto) format.
-
-```rust
-match guard.report().build() {
-    Ok(report) => {
-        let mut file = File::create("profile.pb").unwrap();
-        let profile = report.pprof().unwrap();
-
-        let mut content = Vec::new();
-        profile.encode(&mut content).unwrap();
-        file.write_all(&content).unwrap();
-
-        println!("report: {}", &report);
-    }
-    Err(_) => {}
-};
-```
-
-Then you can use `pprof` command with `profile.pb`. For example:
-
-```shell
-~/go/bin/pprof -svg profile.pb
-```
-
-Then `pprof` will generate a svg file according to the profile.
-
-![tree](https://user-images.githubusercontent.com/5244316/68571082-1f50ff80-049d-11ea-8437-211ab0d80480.png)
-
-## Integrate with `criterion`
-
-With `criterion` feature enabled, a criterion custom profiler is provided in `pprof-rs`.
-
-```rust
-use pprof::criterion::{PProfProfiler, Output};
-
-criterion_group!{
-    name = benches;
-    config = Criterion::default().with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
-    targets = bench
-}
-criterion_main!(benches);
-```
-
-After running the benchmark, you can find the flamegraph at `target/criterion/<name-of-benchmark>/profile/flamegraph.svg`. `protobuf` output is also available with the `Output::Protobuf` option; these end up at `target/criterion/<name-of-benchmark>/profile.pb`.
-
-For more details, you can check the [`examples/criterion.rs`](examples/criterion.rs), and the profiling document of [`criterion`](https://bheisler.github.io/criterion.rs/book/user_guide/profiling.html). For a quick start, you can run this example with `cargo run --example criterion --release --features="flamegraph criterion" -- --bench --profile-time 5`
 
 ## Why not ...
 

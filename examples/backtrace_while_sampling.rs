@@ -1,7 +1,5 @@
 // Copyright 2021 TiKV Project Authors. Licensed under Apache-2.0.
 
-use std::fs::File;
-
 fn deep_recursive(depth: i32) {
     if depth > 0 {
         deep_recursive(depth - 1);
@@ -22,9 +20,6 @@ fn main() {
     }
 
     if let Ok(report) = guard.report().build() {
-        let file = File::create("flamegraph.svg").unwrap();
-        report.flamegraph(file).unwrap();
-
         println!("report: {:?}", &report);
     };
 }

@@ -31,10 +31,8 @@
 //! profiler will ignore the sample whose first frame is from library containing
 //! these strings.
 //!
-//! Skipping `libc`, `libgcc` and `libpthread` could be a solution to the
-//! possible deadlock inside the `_Unwind_Backtrace`, and keep the signal
-//! safety. The dwarf information in "vdso" is incorrect in some distributions,
-//! so it's also suggested to skip it.
+//! The blocklist excludes samples whose interrupted instruction pointer falls
+//! within the named shared libraries.
 //!
 //! You can find more details in
 //! [README.md](https://github.com/tikv/pprof-rs/blob/master/README.md)
@@ -70,29 +68,3 @@ pub use self::error::{Error, Result};
 pub use self::frames::{Frames, Symbol};
 pub use self::profiler::{ProfilerGuard, ProfilerGuardBuilder};
 pub use self::report::{Report, ReportBuilder, UnresolvedReport};
-
-#[cfg(feature = "flamegraph")]
-pub use inferno::flamegraph;
-
-#[allow(clippy::all)]
-#[cfg(all(feature = "prost-codec", not(feature = "protobuf-codec")))]
-pub mod protos {
-    pub use prost::Message;
-
-    include!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/proto/perftools.profiles.rs"
-    ));
-}
-
-#[cfg(feature = "protobuf-codec")]
-pub mod protos {
-    pub use protobuf::Message;
-
-    include!(concat!(env!("OUT_DIR"), "/mod.rs"));
-
-    pub use self::profile::*;
-}
-
-#[cfg(feature = "criterion")]
-pub mod criterion;
