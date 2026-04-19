@@ -75,15 +75,8 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           target: ${{ matrix.target }}
 
-      - name: Run cargo build prost
-        run: cargo build --features flamegraph,prost-codec --target ${{ matrix.target }}
-
-      - name: Run cargo build protobuf
-        run: cargo build --features flamegraph,protobuf-codec --target ${{ matrix.target }}
-
-      - name: Run cargo build frame pointer
-        if: ${{ matrix.toolchain == 'nightly' && matrix.os == 'ubuntu-latest' }}
-        run: cargo build --no-default-features --features frame-pointer --target ${{ matrix.target }}
+      - name: Run cargo build
+        run: cargo build --target ${{ matrix.target }}
 
   test:
     name: Test
@@ -123,11 +116,5 @@ jobs:
         name: Install musl
         run: sudo apt-get update && sudo apt-get install -y musl-tools
 
-      - name: Run cargo test prost
-        run: cargo test --features flamegraph,prost-codec --target ${{ matrix.target }} -- --test-threads 1
-
-      - name: Run cargo test protobuf
-        run: cargo test --features flamegraph,protobuf-codec --target ${{ matrix.target }} -- --test-threads 1
-
-      - name: Run cargo test framehop
-        run: cargo test --features flamegraph,protobuf-codec,framehop-unwinder --target ${{ matrix.target }} -- --test-threads 1
+      - name: Run cargo test
+        run: cargo test --target ${{ matrix.target }} -- --test-threads 1
