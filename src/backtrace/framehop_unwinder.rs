@@ -150,9 +150,6 @@ impl super::Frame for Frame {
         }
     }
 
-    fn resolve_symbol<F: FnMut(&Self::S)>(&self, cb: F) {
-        backtrace::resolve(self.ip as *mut c_void, cb);
-    }
 }
 
 pub struct Trace;
