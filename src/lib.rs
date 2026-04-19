@@ -34,8 +34,6 @@ pub use self::frames::{Frames, Symbol};
 pub use self::profiler::{ProfilerGuard, ProfilerGuardBuilder};
 pub use self::report::{Report, ReportBuilder, UnresolvedReport};
 
-#[cfg(feature = "flamegraph")]
-pub use inferno::flamegraph;
 
 #[allow(clippy::all)]
 #[cfg(all(feature = "prost-codec", not(feature = "protobuf-codec")))]
