@@ -35,23 +35,3 @@ pub use self::profiler::{ProfilerGuard, ProfilerGuardBuilder};
 pub use self::report::{Report, ReportBuilder, UnresolvedReport};
 
 
-#[allow(clippy::all)]
-#[cfg(all(feature = "prost-codec", not(feature = "protobuf-codec")))]
-pub mod protos {
-    pub use prost::Message;
-
-    include!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/proto/perftools.profiles.rs"
-    ));
-}
-
-#[cfg(feature = "protobuf-codec")]
-pub mod protos {
-    pub use protobuf::Message;
-
-    include!(concat!(env!("OUT_DIR"), "/mod.rs"));
-
-    pub use self::profile::*;
-}
-
