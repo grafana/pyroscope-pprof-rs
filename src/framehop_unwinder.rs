@@ -128,7 +128,6 @@ fn read_stack(addr: u64) -> Result<u64, ()> {
 static UNWINDER: Lazy<RwLock<FramehopUnwinder>> =
     Lazy::new(|| RwLock::new(FramehopUnwinder::new()));
 
-
 pub struct Trace;
 
 impl Trace {
