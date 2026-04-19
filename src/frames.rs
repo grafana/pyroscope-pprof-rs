@@ -8,7 +8,6 @@ use std::path::PathBuf;
 use std::time::SystemTime;
 
 use smallvec::SmallVec;
-use symbolic_demangle::demangle;
 
 use crate::backtrace::{Frame, Trace, TraceImpl};
 use crate::{MAX_DEPTH, MAX_THREAD_NAME};
@@ -108,7 +107,7 @@ impl Symbol {
     }
 
     pub fn name(&self) -> String {
-        demangle(&String::from_utf8_lossy(self.raw_name())).into_owned()
+        String::from_utf8_lossy(self.raw_name()).into_owned()
     }
 
     pub fn sys_name(&self) -> Cow<'_, str> {
@@ -239,41 +238,5 @@ impl Debug for Frames {
         } else {
             write!(f, "ThreadId({})", self.thread_id)
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn demangle_rust() {
-        let symbol = Symbol {
-            name: Some(b"_ZN3foo3barE".to_vec()),
-            addr: None,
-            lineno: None,
-            filename: None,
-        };
-
-        assert_eq!(&symbol.name(), "foo::bar")
-    }
-
-    #[test]
-    fn demangle_cpp() {
-        let name =
-            b"_ZNK3MapI10StringName3RefI8GDScriptE10ComparatorIS0_E16DefaultAllocatorE3hasERKS0_"
-                .to_vec();
-
-        let symbol = Symbol {
-            name: Some(name),
-            addr: None,
-            lineno: None,
-            filename: None,
-        };
-
-        assert_eq!(
-            &symbol.name(),
-            "Map<StringName, Ref<GDScript>, Comparator<StringName>, DefaultAllocator>::has(StringName const&) const"
-        )
     }
 }
