@@ -24,6 +24,7 @@ mod frames;
 mod profiler;
 mod report;
 mod timer;
+mod shlib;
 
 pub use self::addr_validate::validate;
 pub use self::collector::{Collector, HashCounter};

@@ -4,7 +4,7 @@ use framehop::{
 use libc::{c_void, ucontext_t};
 use once_cell::sync::Lazy;
 use spin::RwLock;
-mod shlib;
+use crate::shlib;
 
 #[cfg(all(target_arch = "aarch64", target_os = "macos"))]
 fn get_regs_from_context(ucontext: *mut c_void) -> Option<(UnwindRegsNative, u64)> {
