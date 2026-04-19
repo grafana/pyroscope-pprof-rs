@@ -128,10 +128,6 @@ fn read_stack(addr: u64) -> Result<u64, ()> {
 static UNWINDER: Lazy<RwLock<FramehopUnwinder>> =
     Lazy::new(|| RwLock::new(FramehopUnwinder::new()));
 
-extern "C" {
-    fn _Unwind_FindEnclosingFunction(pc: *mut c_void) -> *mut c_void;
-
-}
 
 pub struct Trace;
 
