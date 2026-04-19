@@ -4,12 +4,11 @@ use std::collections::HashMap;
 
 use spin::RwLock;
 
-use crate::frames::{UnresolvedFrames};
+use crate::frames::UnresolvedFrames;
 use crate::profiler::Profiler;
 use crate::timer::ReportTiming;
 
 use crate::{Error, Result};
-
 
 /// The presentation of an unsymbolicated report which is actually an `HashMap` from `UnresolvedFrames` to isize (count).
 pub struct UnresolvedReport {
@@ -20,7 +19,6 @@ pub struct UnresolvedReport {
     pub timing: ReportTiming,
 }
 
-
 /// A builder of `Report` and `UnresolvedReport`. It builds report from a running `Profiler`.
 pub struct ReportBuilder<'a> {
     profiler: &'a RwLock<Result<Profiler>>,
@@ -29,10 +27,7 @@ pub struct ReportBuilder<'a> {
 
 impl<'a> ReportBuilder<'a> {
     pub(crate) fn new(profiler: &'a RwLock<Result<Profiler>>, timing: ReportTiming) -> Self {
-        Self {
-            profiler,
-            timing,
-        }
+        Self { profiler, timing }
     }
 
     // TODO pyroscope does not need deduplication twice (here and in the pprof builder)
@@ -77,4 +72,3 @@ impl<'a> ReportBuilder<'a> {
         }
     }
 }
-

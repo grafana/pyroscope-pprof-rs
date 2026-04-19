@@ -1,6 +1,5 @@
 // Copyright 2019 TiKV Project Authors. Licensed under Apache-2.0.
 
-
 /// Define the MAX supported stack depth. TODO: make this variable mutable.
 #[cfg(feature = "large-depth")]
 pub const MAX_DEPTH: usize = 1024;
@@ -19,17 +18,15 @@ mod addr_validate;
 
 mod collector;
 mod error;
+pub mod framehop_unwinder;
 mod frames;
 mod profiler;
 mod report;
-mod timer;
 mod shlib;
-pub mod framehop_unwinder;
+mod timer;
 
 pub use self::addr_validate::validate;
 pub use self::collector::{Collector, HashCounter};
 pub use self::error::{Error, Result};
 pub use self::profiler::{ProfilerGuard, ProfilerGuardBuilder};
 pub use self::report::{ReportBuilder, UnresolvedReport};
-
-

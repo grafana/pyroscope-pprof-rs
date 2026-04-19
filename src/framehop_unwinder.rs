@@ -1,11 +1,11 @@
+use crate::frames::Frame;
+use crate::shlib;
 use framehop::{
     CacheNative, MustNotAllocateDuringUnwind, UnwindRegsNative, Unwinder, UnwinderNative,
 };
 use libc::{c_void, ucontext_t};
 use once_cell::sync::Lazy;
 use spin::RwLock;
-use crate::frames::Frame;
-use crate::shlib;
 
 #[cfg(all(target_arch = "aarch64", target_os = "macos"))]
 fn get_regs_from_context(ucontext: *mut c_void) -> Option<(UnwindRegsNative, u64)> {
@@ -133,11 +133,9 @@ extern "C" {
 
 }
 
-
 pub struct Trace;
 
 impl Trace {
-
     pub fn init() {
         let _ = UNWINDER.read();
     }

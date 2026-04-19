@@ -61,7 +61,6 @@ impl Default for ProfilerGuardBuilder {
         ProfilerGuardBuilder {
             frequency: 99,
 
-
             #[cfg(any(
                 target_arch = "x86_64",
                 target_arch = "aarch64",
@@ -128,7 +127,6 @@ impl ProfilerGuardBuilder {
                 Err(Error::CreatingError)
             }
             Ok(profiler) => {
-
                 #[cfg(any(
                     target_arch = "x86_64",
                     target_arch = "aarch64",
@@ -351,8 +349,7 @@ extern "C" fn perf_signal_handler(
                 }
             }
 
-            let mut bt: SmallVec<[Frame; MAX_DEPTH]> =
-                SmallVec::with_capacity(MAX_DEPTH);
+            let mut bt: SmallVec<[Frame; MAX_DEPTH]> = SmallVec::with_capacity(MAX_DEPTH);
             let mut index = 0;
 
             let sample_timestamp: SystemTime = SystemTime::now();
@@ -385,7 +382,6 @@ impl Profiler {
             sample_counter: 0,
             old_sigaction: None,
             running: false,
-
 
             #[cfg(any(
                 target_arch = "x86_64",

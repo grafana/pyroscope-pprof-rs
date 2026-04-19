@@ -1,6 +1,6 @@
 // Copyright 2019 TiKV Project Authors. Licensed under Apache-2.0.
 
-use std::fmt::{ Debug, Formatter};
+use std::fmt::{Debug, Formatter};
 use std::hash::{Hash, Hasher};
 use std::time::SystemTime;
 
@@ -8,12 +8,10 @@ use smallvec::SmallVec;
 
 use crate::{MAX_DEPTH, MAX_THREAD_NAME};
 
-
 #[derive(Clone, Debug)]
 pub struct Frame {
     pub ip: usize,
 }
-
 
 #[derive(Clone)]
 pub struct UnresolvedFrames {
@@ -70,8 +68,7 @@ impl PartialEq for UnresolvedFrames {
         if self.thread_id != other.thread_id || frames1.len() != frames2.len() {
             false
         } else {
-            Iterator::zip(frames1.iter(), frames2.iter())
-                .all(|(s1, s2)| s1.ip == s2.ip)
+            Iterator::zip(frames1.iter(), frames2.iter()).all(|(s1, s2)| s1.ip == s2.ip)
         }
     }
 }
@@ -81,10 +78,7 @@ impl Eq for UnresolvedFrames {}
 //todo remove hashing all-together
 impl Hash for UnresolvedFrames {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.frames
-            .iter()
-            .for_each(|frame| frame.ip.hash(state));
+        self.frames.iter().for_each(|frame| frame.ip.hash(state));
         self.thread_id.hash(state);
     }
 }
-
