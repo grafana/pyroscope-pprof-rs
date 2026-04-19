@@ -224,19 +224,3 @@ impl From<UnresolvedFrames> for Frames {
 
 impl Eq for Frames {}
 
-impl Debug for Frames {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        for frame in self.frames.iter() {
-            write!(f, "FRAME: ")?;
-            for symbol in frame.iter() {
-                write!(f, "{} -> ", symbol)?;
-            }
-        }
-        write!(f, "THREAD: ")?;
-        if !self.thread_name.is_empty() {
-            write!(f, "{}", self.thread_name)
-        } else {
-            write!(f, "ThreadId({})", self.thread_id)
-        }
-    }
-}
