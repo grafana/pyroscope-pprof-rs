@@ -21,8 +21,6 @@ mod backtrace;
 mod collector;
 mod error;
 mod frames;
-#[cfg(feature = "perfmaps")]
-mod perfmap;
 mod profiler;
 mod report;
 mod timer;
