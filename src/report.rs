@@ -36,6 +36,8 @@ impl<'a> ReportBuilder<'a> {
         }
     }
 
+    // TODO pyroscope does not need deduplication twice (here and in the pprof builder)
+    // TODO remove ReportBuilder all-together
     /// Build an `UnresolvedReport`
     pub fn build_unresolved_and_reset(&self) -> Result<UnresolvedReport> {
         let mut hash_map = HashMap::new();
