@@ -2,13 +2,13 @@
 name = "pprof-pyroscope-fork"
 version = "0.1500.3"  # based on upstream pprof-rs v0.15.0
 authors = ["Yang Keao <keao.yang@yahoo.com>"]
-edition = "2021"
+edition = "2024"
 license = "Apache-2.0"
 description = "An internal perf tools for rust programs."
 repository = "https://github.com/grafana/pprof-rs"
 documentation = "https://docs.rs/pprof-pyroscope-fork/"
 readme = "README.md"
-rust-version = "1.74.0"  # MSRV
+rust-version = "1.85.0"  # MSRV
 
 [lib]
 name = "pprof"  # keep Rust crate name as `pprof` so existing `use pprof::` code still compiles
