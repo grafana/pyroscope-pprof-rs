@@ -49,7 +49,7 @@ jobs:
     name: Build
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, macos-13]
+        os: [ubuntu-latest, macos-latest, macos-26-intel]
         toolchain: [stable, nightly, 1.74.0]
         target:
           [
@@ -70,13 +70,13 @@ jobs:
             target: aarch64-unknown-linux-gnu
           - os: macos-latest
             target: x86_64-unknown-linux-musl
-          - os: macos-13
+          - os: macos-26-intel
             target: x86_64-unknown-linux-gnu
-          - os: macos-13
+          - os: macos-26-intel
             target: aarch64-unknown-linux-gnu
-          - os: macos-13
+          - os: macos-26-intel
             target: x86_64-unknown-linux-musl
-          - os: macos-13
+          - os: macos-26-intel
             target: aarch64-apple-darwin
       fail-fast: false
     runs-on: ${{ matrix.os }}
@@ -107,7 +107,7 @@ jobs:
     name: Test
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, macos-13]
+        os: [ubuntu-latest, macos-latest, macos-26-intel]
         toolchain: [stable, nightly]
         target:
           [
@@ -122,9 +122,9 @@ jobs:
             target: x86_64-unknown-linux-gnu
           - os: macos-latest
             target: x86_64-unknown-linux-musl
-          - os: macos-13
+          - os: macos-26-intel
             target: x86_64-unknown-linux-gnu
-          - os: macos-13
+          - os: macos-26-intel
             target: x86_64-unknown-linux-musl
       fail-fast: false
     runs-on: ${{ matrix.os }}
