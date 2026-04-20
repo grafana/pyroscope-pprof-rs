@@ -22,7 +22,7 @@ use crate::error::{Error, Result};
 use crate::frames::{Frame, UnresolvedFrames};
 use crate::report::ReportBuilder;
 use crate::timer::Timer;
-use crate::{framehop_unwinder, MAX_DEPTH, MAX_THREAD_NAME};
+use crate::{MAX_DEPTH, MAX_THREAD_NAME, framehop_unwinder};
 
 pub(crate) static PROFILER: Lazy<RwLock<Result<Profiler>>> =
     Lazy::new(|| RwLock::new(Profiler::new()));
@@ -175,7 +175,7 @@ impl ProfilerGuard<'_> {
     }
 }
 
-impl<'a> Drop for ProfilerGuard<'a> {
+impl Drop for ProfilerGuard<'_> {
     fn drop(&mut self) {
         drop(self.timer.take());
 
@@ -272,7 +272,7 @@ impl Drop for ErrnoProtector {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[cfg_attr(
     not(all(any(
         target_arch = "x86_64",

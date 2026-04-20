@@ -12,8 +12,8 @@
 // Without the fix, this test crashes the process with SIGPROF.
 // With the fix (SIG_IGN instead of SIG_DFL restore), it completes cleanly.
 
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 #[test]
 fn test_sigprof_race_crash() {
