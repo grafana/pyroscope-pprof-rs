@@ -1,7 +1,20 @@
 name: macos-sigprof-repro (experiment 9)
 
+# Note: this workflow would ideally use `workflow_dispatch:` only, but
+# GitHub's workflow_dispatch API requires the workflow file to exist on the
+# default (master) branch, and this investigation must not touch master. We
+# therefore use a tightly-scoped `push` trigger that only fires on pushes to
+# this single investigation branch AND only when files relevant to the
+# experiment change. This matches the intent of "do not run on every branch
+# push" while still allowing us to exercise the workflow.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - kk/macos-sigbus-investigation
+    paths:
+      - '.github/workflows/macos-sigprof-repro.yml'
+      - 'experiments/macos_sigprof/**'
 
 permissions:
   contents: read
