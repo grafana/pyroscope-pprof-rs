@@ -241,36 +241,14 @@ fn test_sigprof_race_crash() {
     // during the race window.
     let running = Arc::new(AtomicBool::new(true));
     let mut handles = Vec::new();
-    // === EXPERIMENT 6 (user's Experiment 2a): SA_ONSTACK + sigaltstack ===
-    // Restore the default 2 MB pthread stack (revert 16 MB bump from exp 5),
-    // so we reproduce the condition that previously crashed. Then install
-    // a per-thread sigaltstack with 512 KB in each burner thread so that
-    // SIGPROF is delivered on the alternate stack instead of the thread's
-    // main stack. Paired with SA_ONSTACK on the SIGPROF sigaction (set in
-    // src/profiler.rs in this same commit).
-    //
-    //  - SIGBUS disappears -> the kernel's sigframe setup on a small
-    //    pthread main stack is the trigger (signal-delivery stack issue).
-    //  - SIGBUS persists   -> the fault is not fixed by moving sigframe
-    //    off the main stack; something else is broken.
+    // === EXPERIMENT 7 (investigation, not a fix) ===
+    // Reset to the base reproducing condition: 4 burner threads with the
+    // default 2 MB pthread stack. The new variable is in src/profiler.rs,
+    // where perf_signal_handler now logs the kernel-provided rip/rsp/rbp
+    // on its first call.
     for _ in 0..4 {
         let running = running.clone();
         handles.push(std::thread::spawn(move || {
-            // Install a per-thread alt signal stack. Must stay alive for
-            // the life of the thread; we intentionally leak it.
-            const ALT_STACK_SIZE: usize = 512 * 1024;
-            let alt_stack: Box<[u8]> =
-                vec![0u8; ALT_STACK_SIZE].into_boxed_slice();
-            let alt_stack_ptr = Box::into_raw(alt_stack);
-            unsafe {
-                let ss = libc::stack_t {
-                    ss_sp: alt_stack_ptr as *mut libc::c_void,
-                    ss_size: ALT_STACK_SIZE,
-                    ss_flags: 0,
-                };
-                libc::sigaltstack(&ss, std::ptr::null_mut());
-            }
-
             while running.load(Ordering::Relaxed) {
                 std::hint::black_box(0u64.wrapping_add(1));
             }

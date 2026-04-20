@@ -319,16 +319,63 @@ extern "C" fn perf_signal_handler(
     _siginfo: *mut libc::siginfo_t,
     ucontext: *mut libc::c_void,
 ) {
-    // === EXPERIMENT 4 step 1 (investigation, not a fix) ===
-    // On macOS, make the handler an immediate no-op to determine whether the
-    // SIGBUS is caused by the handler body (framehop unwind, collector, etc.)
-    // or by the signal-delivery / sigaction-race path itself.
-    //
-    // If SIGBUS disappears on macOS with this change → crash is in handler body.
-    // If SIGBUS persists on macOS with this change → crash is in signal
-    // delivery (kernel trampoline, sigaction race, or sigreturn).
-    #[cfg(target_os = "macos")]
+    // === EXPERIMENT 7 (investigation, not a fix) ===
+    // Log the kernel-provided rip/rsp/rbp on the FIRST SIGPROF handler entry.
+    // This tells us:
+    //  - if kernel rip is in user code: crash is in sigreturn / post-handler.
+    //  - if kernel rip is already stack_base - 0x400: crash was already set up
+    //    by something that ran BEFORE the handler.
+    #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
     {
+        use std::sync::atomic::{AtomicBool, Ordering};
+        static LOGGED: AtomicBool = AtomicBool::new(false);
+        if LOGGED
+            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+            .is_ok()
+            && !ucontext.is_null()
+        {
+            unsafe {
+                let uc = ucontext as *mut libc::ucontext_t;
+                let mc = (*uc).uc_mcontext;
+                if !mc.is_null() {
+                    let ss = &(*mc).__ss;
+                    // Format a simple hex line manually (async-signal-safe).
+                    let mut buf = [0u8; 256];
+                    let mut off = 0usize;
+                    const HEX: &[u8; 16] = b"0123456789abcdef";
+                    let prefix: &[u8] = b"\n=== SIGPROF ENTRY === rip=0x";
+                    for &b in prefix {
+                        buf[off] = b;
+                        off += 1;
+                    }
+                    for i in (0..16).rev() {
+                        buf[off] = HEX[((ss.__rip >> (i * 4)) & 0xf) as usize];
+                        off += 1;
+                    }
+                    let mid: &[u8] = b" rsp=0x";
+                    for &b in mid {
+                        buf[off] = b;
+                        off += 1;
+                    }
+                    for i in (0..16).rev() {
+                        buf[off] = HEX[((ss.__rsp >> (i * 4)) & 0xf) as usize];
+                        off += 1;
+                    }
+                    let mid: &[u8] = b" rbp=0x";
+                    for &b in mid {
+                        buf[off] = b;
+                        off += 1;
+                    }
+                    for i in (0..16).rev() {
+                        buf[off] = HEX[((ss.__rbp >> (i * 4)) & 0xf) as usize];
+                        off += 1;
+                    }
+                    buf[off] = b'\n';
+                    off += 1;
+                    libc::write(2, buf.as_ptr() as *const libc::c_void, off);
+                }
+            }
+        }
         let _ = ucontext;
         let _errno = ErrnoProtector::new();
         return;
@@ -545,11 +592,6 @@ impl Profiler {
         // SA_RESTART will only restart a syscall when it's safe to do so,
         // e.g. when it's a blocking read(2) or write(2). See man 7 signal.
         let flags = signal::SaFlags::SA_SIGINFO | signal::SaFlags::SA_RESTART;
-        // === EXPERIMENT 6 (user's Experiment 2a, investigation) ===
-        // Unconditionally add SA_ONSTACK on macOS. Paired with sigaltstack
-        // installed per-thread in tests/sigprof_race.rs. Not a fix.
-        #[cfg(target_os = "macos")]
-        let flags = flags | signal::SaFlags::SA_ONSTACK;
         #[cfg(feature = "frame-pointer")]
         let flags = if self.on_stack {
             // SA_ONSTACK will deliver the signal on an alternate stack. This is crucial
