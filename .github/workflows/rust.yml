@@ -141,3 +141,22 @@ jobs:
 
       - name: Run cargo test framehop
         run: cargo test --features flamegraph,protobuf-codec,framehop-unwinder --target ${{ matrix.target }} -- --test-threads 1
+
+  sigbus_repro:
+    name: SIGBUS reproducer (macOS x86_64)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9
+        with:
+          toolchain: stable
+          target: x86_64-apple-darwin
+
+      - name: Run sigbus_repro
+        run: cargo run --example sigbus_repro --target x86_64-apple-darwin
