@@ -144,6 +144,7 @@ impl ProfilerGuardBuilder {
         }
     }
     pub fn build(self) -> Result<ProfilerGuard<'static>> {
+        #[cfg(target_os = "macos")]
         if is_rosetta_translated() {
             log::error!(
                 "refusing to start profiler: process is running under Rosetta translation on macOS"
@@ -225,11 +226,6 @@ fn is_rosetta_translated() -> bool {
         }
         ret != 0
     }
-}
-
-#[cfg(not(target_os = "macos"))]
-fn is_rosetta_translated() -> bool {
-    false
 }
 
 impl ProfilerGuard<'_> {
