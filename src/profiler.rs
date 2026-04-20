@@ -545,6 +545,11 @@ impl Profiler {
         // SA_RESTART will only restart a syscall when it's safe to do so,
         // e.g. when it's a blocking read(2) or write(2). See man 7 signal.
         let flags = signal::SaFlags::SA_SIGINFO | signal::SaFlags::SA_RESTART;
+        // === EXPERIMENT 6 (user's Experiment 2a, investigation) ===
+        // Unconditionally add SA_ONSTACK on macOS. Paired with sigaltstack
+        // installed per-thread in tests/sigprof_race.rs. Not a fix.
+        #[cfg(target_os = "macos")]
+        let flags = flags | signal::SaFlags::SA_ONSTACK;
         #[cfg(feature = "frame-pointer")]
         let flags = if self.on_stack {
             // SA_ONSTACK will deliver the signal on an alternate stack. This is crucial
