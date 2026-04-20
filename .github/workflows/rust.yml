@@ -122,6 +122,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       PPROF_EXPECT_ROSETTA_FAILURE: ${{ (matrix.os == 'macos-latest' && matrix.target == 'x86_64-apple-darwin') && '1' || '0' }}
+      TEST_EXTRA_ARGS: ${{ (matrix.os == 'macos-latest' && matrix.target == 'x86_64-apple-darwin') && '--nocapture' || '' }}
 
     steps:
       - name: Checkout sources
@@ -140,10 +141,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y musl-tools
 
       - name: Run cargo test prost
-        run: cargo test --features flamegraph,prost-codec --target ${{ matrix.target }} -- --test-threads 1
+        run: cargo test --features flamegraph,prost-codec --target ${{ matrix.target }} -- --test-threads 1 ${{ env.TEST_EXTRA_ARGS }}
 
       - name: Run cargo test protobuf
-        run: cargo test --features flamegraph,protobuf-codec --target ${{ matrix.target }} -- --test-threads 1
+        run: cargo test --features flamegraph,protobuf-codec --target ${{ matrix.target }} -- --test-threads 1 ${{ env.TEST_EXTRA_ARGS }}
 
       - name: Run cargo test framehop
-        run: cargo test --features flamegraph,protobuf-codec,framehop-unwinder --target ${{ matrix.target }} -- --test-threads 1
+        run: cargo test --features flamegraph,protobuf-codec,framehop-unwinder --target ${{ matrix.target }} -- --test-threads 1 ${{ env.TEST_EXTRA_ARGS }}
