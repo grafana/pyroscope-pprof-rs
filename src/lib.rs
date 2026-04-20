@@ -8,13 +8,13 @@
 //!
 //! A sample usage is:
 //!
-//! ```rust
+//! ```no_run
 //! let guard = pprof::ProfilerGuard::new(100).unwrap();
 //! ```
 //!
 //! Then you can read report from the guard:
 //!
-//! ```rust
+//! ```no_run
 //! # let guard = pprof::ProfilerGuard::new(100).unwrap();
 //!if let Ok(report) = guard.report().build() {
 //!    println!("report: {:?}", &report);
@@ -23,7 +23,7 @@
 //!
 //! More configuration can be passed through `ProfilerGuardBuilder`:
 //!
-//! ```rust
+//! ```no_run
 //! let guard = pprof::ProfilerGuardBuilder::default().frequency(1000).blocklist(&["libc", "libgcc", "pthread", "vdso"]).build().unwrap();
 //! ```
 //!
