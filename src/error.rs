@@ -12,7 +12,11 @@ pub enum Error {
     Running,
     #[error("stop running cpu profiler error")]
     NotRunning,
-    #[error("pprof-rs does not support running under Rosetta translation on macOS")]
+    #[error(
+        "pprof-rs does not support running under Rosetta translation on macOS; \
+         see https://github.com/grafana/pyroscope-pprof-rs/issues/28 and \
+         https://github.com/grafana/pyroscope-pprof-rs/pull/35"
+    )]
     RosettaTranslated,
 }
 
