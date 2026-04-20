@@ -144,6 +144,13 @@ impl ProfilerGuardBuilder {
         }
     }
     pub fn build(self) -> Result<ProfilerGuard<'static>> {
+        if is_rosetta_translated() {
+            log::error!(
+                "refusing to start profiler: process is running under Rosetta translation on macOS"
+            );
+            return Err(Error::RosettaTranslated);
+        }
+
         trigger_lazy();
 
         match PROFILER.write().as_mut() {
@@ -189,6 +196,40 @@ fn trigger_lazy() {
     let _ = backtrace::Backtrace::new();
     let _profiler = PROFILER.read();
     TraceImpl::init();
+}
+
+#[cfg(target_os = "macos")]
+fn is_rosetta_translated() -> bool {
+    use std::mem;
+
+    let name = b"sysctl.proc_translated\0";
+    let mut ret: c_int = 0;
+    let mut size: libc::size_t = mem::size_of::<c_int>();
+    unsafe {
+        let rc = libc::sysctlbyname(
+            name.as_ptr() as *const libc::c_char,
+            &mut ret as *mut _ as *mut libc::c_void,
+            &mut size,
+            std::ptr::null_mut(),
+            0,
+        );
+        if rc == -1 {
+            let errno = *libc::__error();
+            if errno != libc::ENOENT {
+                log::warn!(
+                    "sysctlbyname(sysctl.proc_translated) failed with errno {}, assuming not translated",
+                    errno
+                );
+            }
+            return false;
+        }
+        ret != 0
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+fn is_rosetta_translated() -> bool {
+    false
 }
 
 impl ProfilerGuard<'_> {

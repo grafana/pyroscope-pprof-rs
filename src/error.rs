@@ -12,6 +12,8 @@ pub enum Error {
     Running,
     #[error("stop running cpu profiler error")]
     NotRunning,
+    #[error("pprof-rs does not support running under Rosetta translation on macOS")]
+    RosettaTranslated,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
