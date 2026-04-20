@@ -241,7 +241,14 @@ fn test_sigprof_race_crash() {
     // during the race window.
     let running = Arc::new(AtomicBool::new(true));
     let mut handles = Vec::new();
-    for _ in 0..4 {
+    // === EXPERIMENT 4 (investigation, not a fix) ===
+    // Drop burner threads from 4 to 0. SIGPROF (ITIMER_PROF) will now only
+    // hit the main thread (8 MB stack), not a secondary pthread (2 MB stack).
+    // Previous captures all showed the fault on a 2 MB pthread with
+    // pthread_self == stack_base. If SIGBUS disappears: the bug is specific
+    // to SIGPROF delivery to a secondary pthread. If it persists: the bug
+    // also manifests on the main thread.
+    for _ in 0..0 {
         let running = running.clone();
         handles.push(std::thread::spawn(move || {
             while running.load(Ordering::Relaxed) {
