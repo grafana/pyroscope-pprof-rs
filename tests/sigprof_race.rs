@@ -241,20 +241,27 @@ fn test_sigprof_race_crash() {
     // during the race window.
     let running = Arc::new(AtomicBool::new(true));
     let mut handles = Vec::new();
-    // === EXPERIMENT 4 (investigation, not a fix) ===
-    // Drop burner threads from 4 to 0. SIGPROF (ITIMER_PROF) will now only
-    // hit the main thread (8 MB stack), not a secondary pthread (2 MB stack).
-    // Previous captures all showed the fault on a 2 MB pthread with
-    // pthread_self == stack_base. If SIGBUS disappears: the bug is specific
-    // to SIGPROF delivery to a secondary pthread. If it persists: the bug
-    // also manifests on the main thread.
-    for _ in 0..0 {
+    // === EXPERIMENT 5 (investigation, not a fix) ===
+    // Experiment 4 (0 burner threads) passed. Restore 4 burner threads but
+    // give each a 16 MB stack via thread::Builder::stack_size. Default
+    // std::thread::spawn on macOS uses 2 MB; main thread gets 8 MB.
+    //
+    //  - SIGBUS disappears -> the 2 MB small stack is the trigger
+    //    (classic "kernel reserves signal frame off a small stack")
+    //  - SIGBUS persists   -> any secondary pthread is cursed (the
+    //    stack size is irrelevant)
+    for _ in 0..4 {
         let running = running.clone();
-        handles.push(std::thread::spawn(move || {
-            while running.load(Ordering::Relaxed) {
-                std::hint::black_box(0u64.wrapping_add(1));
-            }
-        }));
+        handles.push(
+            std::thread::Builder::new()
+                .stack_size(16 * 1024 * 1024)
+                .spawn(move || {
+                    while running.load(Ordering::Relaxed) {
+                        std::hint::black_box(0u64.wrapping_add(1));
+                    }
+                })
+                .unwrap(),
+        );
     }
 
     // === EXPERIMENT 3 (investigation, not a fix) ===
