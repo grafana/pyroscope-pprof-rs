@@ -1,0 +1,77 @@
+name: macos-sigprof-repro (experiment 9)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  repro-2m-race:
+    name: repro 2MB stack / sigaction RACE (expected CRASH)
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: build
+        working-directory: experiments/macos_sigprof
+        run: make repro_2m_race
+      - name: run (continue on crash; we WANT the crash signature)
+        working-directory: experiments/macos_sigprof
+        continue-on-error: true
+        run: |
+          set +e
+          ./repro_2m_race >out.log 2>&1
+          echo "exit_code=$?" >>out.log
+          cat out.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: repro-2m-race-log
+          path: experiments/macos_sigprof/out.log
+
+  repro-16m-race:
+    name: repro 16MB stack / sigaction RACE (expected PASS)
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: build
+        working-directory: experiments/macos_sigprof
+        run: make repro_16m_race
+      - name: run (continue on crash)
+        working-directory: experiments/macos_sigprof
+        continue-on-error: true
+        run: |
+          set +e
+          ./repro_16m_race >out.log 2>&1
+          echo "exit_code=$?" >>out.log
+          cat out.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: repro-16m-race-log
+          path: experiments/macos_sigprof/out.log
+
+  repro-2m-steady:
+    name: repro 2MB stack / STEADY (no sigaction churn)
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: build
+        working-directory: experiments/macos_sigprof
+        run: make repro_2m_steady
+      - name: run (continue on crash)
+        working-directory: experiments/macos_sigprof
+        continue-on-error: true
+        run: |
+          set +e
+          ./repro_2m_steady >out.log 2>&1
+          echo "exit_code=$?" >>out.log
+          cat out.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: repro-2m-steady-log
+          path: experiments/macos_sigprof/out.log
