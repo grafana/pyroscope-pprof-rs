@@ -172,7 +172,9 @@ jobs:
 
       - name: Run reproducer (expect SIGBUS crash)
         run: |
-          /tmp/sigign_crash; code=$?
+          set +e
+          /tmp/sigign_crash
+          code=$?
           echo "exit code: $code"
           # SIGBUS = signal 10, shell exit code = 128 + 10 = 138
-          [ $code -eq 138 ] || { echo "expected exit 138 (SIGBUS), got $code"; exit 1; }
+          [ "$code" -eq 138 ] || { echo "expected exit 138 (SIGBUS), got $code"; exit 1; }
