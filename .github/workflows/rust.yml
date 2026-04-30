@@ -153,28 +153,3 @@ jobs:
 
       - name: Run cargo test framehop
         run: cargo test --features flamegraph,protobuf-codec,framehop-unwinder --target ${{ matrix.target }} -- --test-threads 1
-
-  sigign-crash-reproducer:
-    name: SIG_IGN crash reproducer (macOS only)
-    strategy:
-      matrix:
-        os: [macos-latest, macos-26-intel]
-      fail-fast: false
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - name: Compile reproducer
-        run: clang -O2 -pthread -o /tmp/sigign_crash tests/sigign_macos_crash.c
-
-      - name: Run reproducer (expect SIGBUS crash)
-        run: |
-          set +e
-          /tmp/sigign_crash
-          code=$?
-          echo "exit code: $code"
-          # SIGBUS = signal 10, shell exit code = 128 + 10 = 138
-          [ "$code" -eq 138 ] || { echo "expected exit 138 (SIGBUS), got $code"; exit 1; }
