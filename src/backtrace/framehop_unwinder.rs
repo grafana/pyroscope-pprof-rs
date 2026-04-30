@@ -87,6 +87,7 @@ struct FramehopUnwinder {
 
 impl FramehopUnwinder {
     pub fn new() -> Self {
+        println!("framehop");
         let mut unwinder = UnwinderNative::new();
         for obj in shlib::get_objects() {
             unwinder.add_module(obj.clone());
