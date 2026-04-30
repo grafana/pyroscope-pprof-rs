@@ -79,6 +79,7 @@ pub fn validate<T>(addr: *const T) -> bool {
             "validate<T>(): T must be at least two pointer sizes wide",
         );
     }
+    #[allow(clippy::let_unit_value)]
     let _: () = AssertSize::<T>::OK;
 
     // it's a short circuit for null pointer, as it'll give an error in
