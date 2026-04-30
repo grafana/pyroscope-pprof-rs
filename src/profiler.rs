@@ -536,7 +536,7 @@ impl Profiler {
         self.old_sigaction.take();
         let noop = signal::SigAction::new(
             signal::SigHandler::SigAction(noop),
-            signal::SaFlags::SA_SIGINFO,
+            signal::SaFlags::SA_SIGINFO | signal::SaFlags::SA_RESTART,
             signal::SigSet::empty(),
         );
         unsafe { signal::sigaction(signal::SIGPROF, &noop) }?;

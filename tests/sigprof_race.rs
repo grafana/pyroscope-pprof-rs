@@ -39,13 +39,10 @@ fn test_sigprof_race_crash() {
     // signal handler, starts timer) and drops it (stops timer, unregisters
     // handler). The main thread burns CPU between cycles so SIGPROF can be
     // delivered to it during the race window between unregister and re-register.
-    for j in 0..8000 {
+    for _ in 0..8000 {
         let _guard = pprof::ProfilerGuard::new(999).unwrap();
         for _ in 0..50_000 {
             std::hint::black_box(0u64.wrapping_add(1));
-        }
-        if j % 100 == 0 {
-            println!(". ")
         }
     }
 
