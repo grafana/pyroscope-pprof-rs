@@ -9,29 +9,23 @@ use criterion::profiler::Profiler;
 use std::fs::File;
 #[cfg(feature = "_protobuf")]
 use std::io::Write;
-use std::marker::PhantomData;
 use std::os::raw::c_int;
 use std::path::Path;
 
 #[allow(clippy::large_enum_variant)]
-pub enum Output<'a> {
+pub enum Output {
     #[cfg(feature = "_protobuf")]
     Protobuf,
-
-    #[deprecated(
-        note = "This branch is used to include lifetime parameter. Don't use it directly."
-    )]
-    _Phantom(PhantomData<&'a ()>),
 }
 
-pub struct PProfProfiler<'a, 'b> {
+pub struct PProfProfiler<'a> {
     frequency: c_int,
-    output: Output<'b>,
+    output: Output,
     active_profiler: Option<ProfilerGuard<'a>>,
 }
 
-impl<'a, 'b> PProfProfiler<'a, 'b> {
-    pub fn new(frequency: c_int, output: Output<'b>) -> Self {
+impl<'a> PProfProfiler<'a> {
+    pub fn new(frequency: c_int, output: Output) -> Self {
         Self {
             frequency,
             output,
@@ -43,7 +37,7 @@ impl<'a, 'b> PProfProfiler<'a, 'b> {
 #[cfg(not(feature = "_protobuf"))]
 compile_error!("Feature \"protobuf\" must be enabled when \"criterion\" feature is enabled.");
 
-impl<'a, 'b> Profiler for PProfProfiler<'a, 'b> {
+impl<'a> Profiler for PProfProfiler<'a> {
     fn start_profiling(&mut self, _benchmark_id: &str, _benchmark_dir: &Path) {
         self.active_profiler = Some(ProfilerGuard::new(self.frequency).unwrap());
     }
@@ -54,10 +48,6 @@ impl<'a, 'b> Profiler for PProfProfiler<'a, 'b> {
         let filename = match self.output {
             #[cfg(feature = "_protobuf")]
             Output::Protobuf => "profile.pb",
-            // This is `""` but not `unreachable!()`, because `unreachable!()`
-            // will result in another compile error, so that the user may not
-            // realize the error thrown by `compile_error!()` at the first time.
-            _ => "",
         };
         let output_path = benchmark_dir.join(filename);
         let output_file = File::create(&output_path).unwrap_or_else(|_| {
@@ -86,8 +76,6 @@ impl<'a, 'b> Profiler for PProfProfiler<'a, 'b> {
                         .write_all(&content)
                         .expect("Error while writing protobuf");
                 }
-
-                _ => unreachable!(),
             }
         }
     }
