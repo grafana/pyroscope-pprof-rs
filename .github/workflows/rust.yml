@@ -36,10 +36,10 @@ jobs:
         run: rm proto/*.rs
 
       - name: Run cargo clippy prost
-        run: cargo clippy --all-targets --features flamegraph,prost-codec -- -D warnings
+        run: cargo clippy --all-targets --features flamegraph,prost-codec,framehop-unwinder -- -D warnings
 
       - name: Run cargo clippy protobuf
-        run: cargo clippy --all-targets --features flamegraph,protobuf-codec -- -D warnings
+        run: cargo clippy --all-targets --features flamegraph,protobuf-codec,framehop-unwinder -- -D warnings
 
       - name: Check if the prost file committed to git is up-to-date
         run: |
@@ -86,10 +86,10 @@ jobs:
           target: ${{ matrix.target }}
 
       - name: Run cargo build prost
-        run: cargo build --features flamegraph,prost-codec --target ${{ matrix.target }}
+        run: cargo build --features flamegraph,prost-codec,framehop-unwinder --target ${{ matrix.target }}
 
       - name: Run cargo build protobuf
-        run: cargo build --features flamegraph,protobuf-codec --target ${{ matrix.target }}
+        run: cargo build --features flamegraph,protobuf-codec,framehop-unwinder --target ${{ matrix.target }}
 
       - name: Run cargo build frame pointer
         if: ${{ matrix.toolchain == 'nightly' && matrix.os == 'ubuntu-latest' }}
@@ -134,10 +134,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y musl-tools
 
       - name: Run cargo test prost
-        run: cargo test --features flamegraph,prost-codec --target ${{ matrix.target }} -- --test-threads 1
+        run: cargo test --features flamegraph,prost-codec,framehop-unwinder --target ${{ matrix.target }} -- --test-threads 1
 
       - name: Run cargo test protobuf
-        run: cargo test --features flamegraph,protobuf-codec --target ${{ matrix.target }} -- --test-threads 1
+        run: cargo test --features flamegraph,protobuf-codec,framehop-unwinder --target ${{ matrix.target }} -- --test-threads 1
 
       - name: Run cargo test framehop
         run: cargo test --features flamegraph,protobuf-codec,framehop-unwinder --target ${{ matrix.target }} -- --test-threads 1
