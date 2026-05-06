@@ -2,15 +2,11 @@
 
 #[cfg(feature = "flamegraph")]
 use crate::flamegraph::Options as FlamegraphOptions;
-#[cfg(feature = "_protobuf")]
-use crate::protos::Message;
 
 use crate::ProfilerGuard;
 use criterion::profiler::Profiler;
 
 use std::fs::File;
-#[cfg(feature = "_protobuf")]
-use std::io::Write;
 use std::marker::PhantomData;
 use std::os::raw::c_int;
 use std::path::Path;
@@ -19,9 +15,6 @@ use std::path::Path;
 pub enum Output<'a> {
     #[cfg(feature = "flamegraph")]
     Flamegraph(Option<FlamegraphOptions<'a>>),
-
-    #[cfg(feature = "_protobuf")]
-    Protobuf,
 
     #[deprecated(
         note = "This branch is used to include lifetime parameter. Don't use it directly."
@@ -45,8 +38,8 @@ impl<'a, 'b> PProfProfiler<'a, 'b> {
     }
 }
 
-#[cfg(not(any(feature = "_protobuf", feature = "flamegraph")))]
-compile_error!("Either feature \"protobuf\" or \"flamegraph\" must be enabled when \"criterion\" feature is enabled.");
+#[cfg(not(feature = "flamegraph"))]
+compile_error!("Feature \"flamegraph\" must be enabled when \"criterion\" feature is enabled.");
 
 impl<'a, 'b> Profiler for PProfProfiler<'a, 'b> {
     fn start_profiling(&mut self, _benchmark_id: &str, _benchmark_dir: &Path) {
@@ -59,8 +52,6 @@ impl<'a, 'b> Profiler for PProfProfiler<'a, 'b> {
         let filename = match self.output {
             #[cfg(feature = "flamegraph")]
             Output::Flamegraph(_) => "flamegraph.svg",
-            #[cfg(feature = "_protobuf")]
-            Output::Protobuf => "profile.pb",
             // This is `""` but not `unreachable!()`, because `unreachable!()`
             // will result in another compile error, so that the user may not
             // realize the error thrown by `compile_error!()` at the first time.
@@ -84,27 +75,6 @@ impl<'a, 'b> Profiler for PProfProfiler<'a, 'b> {
                         .unwrap()
                         .flamegraph_with_options(output_file, options)
                         .expect("Error while writing flamegraph");
-                }
-
-                #[cfg(feature = "_protobuf")]
-                Output::Protobuf => {
-                    let mut output_file = output_file;
-
-                    let profile = profiler.report().build().unwrap().pprof().unwrap();
-
-                    let mut content = Vec::new();
-                    #[cfg(not(feature = "protobuf-codec"))]
-                    profile
-                        .encode(&mut content)
-                        .expect("Error while encoding protobuf");
-                    #[cfg(feature = "protobuf-codec")]
-                    profile
-                        .write_to_vec(&mut content)
-                        .expect("Error while encoding protobuf");
-
-                    output_file
-                        .write_all(&content)
-                        .expect("Error while writing protobuf");
                 }
 
                 _ => unreachable!(),
