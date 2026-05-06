@@ -97,7 +97,7 @@ fn main() {
         }
     }
 
-    println!("Prime numbers: {}", v);
+    println!("Prime numbers: {v}");
 
     if let Ok(report) = guard.report().build() {
         let mut file = File::create("profile.pb").unwrap();
@@ -107,6 +107,6 @@ fn main() {
         profile.write_to_vec(&mut content).unwrap();
         file.write_all(&content).unwrap();
 
-        println!("report: {:?}", report);
+        println!("report: {report:?}");
     };
 }

@@ -95,7 +95,7 @@ fn main() {
             })
             .build()
         {
-            println!("{:?}", report);
+            println!("{report:?}");
         };
         std::thread::sleep(std::time::Duration::from_secs(1))
     }
