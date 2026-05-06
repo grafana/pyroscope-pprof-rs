@@ -252,7 +252,7 @@ impl Debug for Frames {
         for frame in self.frames.iter() {
             write!(f, "FRAME: ")?;
             for symbol in frame.iter() {
-                write!(f, "{} -> ", symbol)?;
+                write!(f, "{symbol} -> ")?;
             }
         }
         write!(f, "THREAD: ")?;

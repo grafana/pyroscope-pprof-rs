@@ -167,7 +167,7 @@ impl<'a> ReportBuilder<'a> {
 impl Debug for Report {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         for (key, val) in self.data.iter() {
-            write!(f, "{:?} {}", key, val)?;
+            write!(f, "{key:?} {val}")?;
             writeln!(f)?;
         }
 
