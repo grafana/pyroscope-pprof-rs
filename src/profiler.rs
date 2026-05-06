@@ -148,7 +148,7 @@ impl ProfilerGuardBuilder {
 
         match PROFILER.write().as_mut() {
             Err(err) => {
-                log::error!("Error in creating profiler: {}", err);
+                log::error!("Error in creating profiler: {err}");
                 Err(Error::CreatingError)
             }
             Ok(profiler) => {
@@ -214,7 +214,7 @@ impl<'a> Drop for ProfilerGuard<'a> {
             Err(_) => {}
             Ok(profiler) => match profiler.stop() {
                 Ok(()) => {}
-                Err(err) => log::error!("error while stopping profiler {}", err),
+                Err(err) => log::error!("error while stopping profiler {err}"),
             },
         }
     }
