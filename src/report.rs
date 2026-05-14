@@ -167,7 +167,7 @@ impl<'a> ReportBuilder<'a> {
 impl Debug for Report {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         for (key, val) in self.data.iter() {
-            write!(f, "{:?} {}", key, val)?;
+            write!(f, "{key:?} {val}")?;
             writeln!(f)?;
         }
 
@@ -208,12 +208,12 @@ mod flamegraph {
 
                     for frame in key.frames.iter().rev() {
                         for symbol in frame.iter().rev() {
-                            write!(&mut line, "{};", symbol).unwrap();
+                            write!(&mut line, "{symbol};").unwrap();
                         }
                     }
 
                     line.pop().unwrap_or_default();
-                    write!(&mut line, " {}", value).unwrap();
+                    write!(&mut line, " {value}").unwrap();
 
                     line
                 })

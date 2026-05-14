@@ -95,12 +95,12 @@ fn main() {
         }
     }
 
-    println!("Prime numbers: {}", v);
+    println!("Prime numbers: {v}");
 
     if let Ok(report) = guard.report().build() {
         let file = File::create("flamegraph.svg").unwrap();
         report.flamegraph(file).unwrap();
 
-        println!("report: {:?}", &report);
+        println!("report: {report:?}");
     };
 }

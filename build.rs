@@ -16,7 +16,7 @@ fn generate_protobuf() {
     cg.out_dir(&out_dir).run().unwrap();
 
     // Optionally, write a mod.rs file for module inclusion
-    let mut f = std::fs::File::create(format!("{}/mod.rs", out_dir)).unwrap();
+    let mut f = std::fs::File::create(format!("{out_dir}/mod.rs")).unwrap();
     write!(f, "pub mod profile;").unwrap();
 }
 
@@ -37,9 +37,9 @@ fn generate_prost() {
     io::copy(&mut proto_file, &mut hasher).unwrap();
     let mut hex = String::new();
     for b in hasher.finalize() {
-        write!(&mut hex, "{:x}", b).unwrap();
+        write!(&mut hex, "{b:x}").unwrap();
     }
-    let hash_comment = format!("// {}  proto/profile.proto", hex);
+    let hash_comment = format!("// {hex}  proto/profile.proto");
 
     let first_line = File::open(PRE_GENERATED_PATH)
         .and_then(|f| {
@@ -57,7 +57,7 @@ fn generate_prost() {
             .unwrap();
         // Prepend the hash comment to the generated file.
         let generated = fs::read_to_string(PRE_GENERATED_PATH).unwrap();
-        let with_hex = format!("{}\n\n{}", hash_comment, generated);
+        let with_hex = format!("{hash_comment}\n\n{generated}");
         fs::write(PRE_GENERATED_PATH, with_hex).unwrap();
     }
 }
