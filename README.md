@@ -35,40 +35,9 @@ FRAME: backtrace::backtrace::trace::h3e91a3123a3049a5 -> FRAME: pprof::profiler:
 ## Features
 
 - `cpp` enables the cpp demangle.
-- `flamegraph` enables the flamegraph report format.
 - `prost-codec` enables the pprof protobuf report format through `prost`.
 - `protobuf-codec` enables the pprof protobuf report format through `protobuf` crate.
 - `frame-pointer` gets the backtrace through frame pointer. **only available for nightly**
-
-## Flamegraph
-
-```toml
-pprof = { version = "0.15", features = ["flamegraph"] }
-```
-
-If `flamegraph` feature is enabled, you can generate flamegraph from the report. `Report` struct has a method `flamegraph` which can generate flamegraph and write it into a `Write`.
-
-```rust
-if let Ok(report) = guard.report().build() {
-    let file = File::create("flamegraph.svg").unwrap();
-    report.flamegraph(file).unwrap();
-};
-```
-
-Additionally, custom flamegraph options can be specified.
-
-```rust
-if let Ok(report) = guard.report().build() {
-    let file = File::create("flamegraph.svg").unwrap();
-    let mut options = pprof::flamegraph::Options::default();
-    options.image_width = Some(2500);
-    report.flamegraph_with_options(file, &mut options).unwrap();
-};
-```
-
-Here is an example of generated flamegraph:
-
-![flamegraph](https://user-images.githubusercontent.com/5244316/68021936-c1265e80-fcdd-11e9-8fa5-62b548bc751d.png)
 
 ## Frame Post Processor
 
@@ -106,13 +75,6 @@ fn frames_post_processor() -> impl Fn(&mut pprof::Frames) {
             }
         }
     }
-}
-```
-
-```rust
-if let Ok(report) = guard.frames_post_processor(frames_post_processor()).report().build() {
-    let file = File::create("flamegraph.svg").unwrap();
-    report.flamegraph(file).unwrap();
 }
 ```
 
@@ -155,15 +117,15 @@ use pprof::criterion::{PProfProfiler, Output};
 
 criterion_group!{
     name = benches;
-    config = Criterion::default().with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
+    config = Criterion::default().with_profiler(PProfProfiler::new(100, Output::Protobuf));
     targets = bench
 }
 criterion_main!(benches);
 ```
 
-After running the benchmark, you can find the flamegraph at `target/criterion/<name-of-benchmark>/profile/flamegraph.svg`. `protobuf` output is also available with the `Output::Protobuf` option; these end up at `target/criterion/<name-of-benchmark>/profile.pb`.
+After running the benchmark, you can find the `protobuf` output at `target/criterion/<name-of-benchmark>/profile.pb`.
 
-For more details, you can check the [`examples/criterion.rs`](examples/criterion.rs), and the profiling document of [`criterion`](https://bheisler.github.io/criterion.rs/book/user_guide/profiling.html). For a quick start, you can run this example with `cargo run --example criterion --release --features="flamegraph criterion" -- --bench --profile-time 5`
+For more details, you can check the [`examples/criterion.rs`](examples/criterion.rs), and the profiling document of [`criterion`](https://bheisler.github.io/criterion.rs/book/user_guide/profiling.html). For a quick start, you can run this example with `cargo run --example criterion --release --features="prost-codec criterion" -- --bench --profile-time 5`
 
 ## Why not ...
 

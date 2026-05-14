@@ -1,7 +1,5 @@
 // Copyright 2020 TiKV Project Authors. Licensed under Apache-2.0.
 
-#[cfg(feature = "flamegraph")]
-use crate::flamegraph::Options as FlamegraphOptions;
 #[cfg(feature = "_protobuf")]
 use crate::protos::Message;
 
@@ -17,9 +15,6 @@ use std::path::Path;
 
 #[allow(clippy::large_enum_variant)]
 pub enum Output<'a> {
-    #[cfg(feature = "flamegraph")]
-    Flamegraph(Option<FlamegraphOptions<'a>>),
-
     #[cfg(feature = "_protobuf")]
     Protobuf,
 
@@ -45,8 +40,8 @@ impl<'a, 'b> PProfProfiler<'a, 'b> {
     }
 }
 
-#[cfg(not(any(feature = "_protobuf", feature = "flamegraph")))]
-compile_error!("Either feature \"protobuf\" or \"flamegraph\" must be enabled when \"criterion\" feature is enabled.");
+#[cfg(not(feature = "_protobuf"))]
+compile_error!("Feature \"protobuf\" must be enabled when \"criterion\" feature is enabled.");
 
 impl<'a, 'b> Profiler for PProfProfiler<'a, 'b> {
     fn start_profiling(&mut self, _benchmark_id: &str, _benchmark_dir: &Path) {
@@ -57,8 +52,6 @@ impl<'a, 'b> Profiler for PProfProfiler<'a, 'b> {
         std::fs::create_dir_all(benchmark_dir).unwrap();
 
         let filename = match self.output {
-            #[cfg(feature = "flamegraph")]
-            Output::Flamegraph(_) => "flamegraph.svg",
             #[cfg(feature = "_protobuf")]
             Output::Protobuf => "profile.pb",
             // This is `""` but not `unreachable!()`, because `unreachable!()`
@@ -73,19 +66,6 @@ impl<'a, 'b> Profiler for PProfProfiler<'a, 'b> {
 
         if let Some(profiler) = self.active_profiler.take() {
             match &mut self.output {
-                #[cfg(feature = "flamegraph")]
-                Output::Flamegraph(options) => {
-                    let default_options = &mut FlamegraphOptions::default();
-                    let options = options.as_mut().unwrap_or(default_options);
-
-                    profiler
-                        .report()
-                        .build()
-                        .unwrap()
-                        .flamegraph_with_options(output_file, options)
-                        .expect("Error while writing flamegraph");
-                }
-
                 #[cfg(feature = "_protobuf")]
                 Output::Protobuf => {
                     let mut output_file = output_file;

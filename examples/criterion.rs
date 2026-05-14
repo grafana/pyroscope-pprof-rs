@@ -30,7 +30,7 @@ fn bench_group(c: &mut Criterion) {
 
 criterion_group! {
     name = benches;
-    config = Criterion::default().with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
+    config = Criterion::default().with_profiler(PProfProfiler::new(100, Output::Protobuf));
     targets = bench, bench_group
 }
 criterion_main!(benches);

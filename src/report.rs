@@ -65,7 +65,7 @@ impl<'a> ReportBuilder<'a> {
 
         match self.profiler.read().as_ref() {
             Err(err) => {
-                log::error!("Error in creating profiler: {}", err);
+                log::error!("Error in creating profiler: {err}");
                 Err(Error::CreatingError)
             }
             Ok(profiler) => {
@@ -117,7 +117,7 @@ impl<'a> ReportBuilder<'a> {
 
         match self.profiler.write().as_mut() {
             Err(err) => {
-                log::error!("Error in creating profiler: {}", err);
+                log::error!("Error in creating profiler: {err}");
                 Err(Error::CreatingError)
             }
             Ok(profiler) => {
@@ -172,59 +172,6 @@ impl Debug for Report {
         }
 
         Ok(())
-    }
-}
-
-#[cfg(feature = "flamegraph")]
-mod flamegraph {
-    use super::*;
-    use inferno::flamegraph;
-    use std::fmt::Write;
-
-    impl Report {
-        /// `flamegraph` will write an svg flamegraph into `writer` **only available with `flamegraph` feature**
-        pub fn flamegraph<W>(&self, writer: W) -> Result<()>
-        where
-            W: std::io::Write,
-        {
-            self.flamegraph_with_options(writer, &mut flamegraph::Options::default())
-        }
-
-        /// same as `flamegraph`, but accepts custom `options` for the flamegraph
-        pub fn flamegraph_with_options<W>(
-            &self,
-            writer: W,
-            options: &mut flamegraph::Options,
-        ) -> Result<()>
-        where
-            W: std::io::Write,
-        {
-            let lines: Vec<String> = self
-                .data
-                .iter()
-                .map(|(key, value)| {
-                    let mut line = key.thread_name_or_id();
-                    line.push(';');
-
-                    for frame in key.frames.iter().rev() {
-                        for symbol in frame.iter().rev() {
-                            write!(&mut line, "{symbol};").unwrap();
-                        }
-                    }
-
-                    line.pop().unwrap_or_default();
-                    write!(&mut line, " {value}").unwrap();
-
-                    line
-                })
-                .collect();
-            if !lines.is_empty() {
-                flamegraph::from_lines(options, lines.iter().map(|s| &**s), writer).unwrap();
-                // TODO: handle this error
-            }
-
-            Ok(())
-        }
     }
 }
 
