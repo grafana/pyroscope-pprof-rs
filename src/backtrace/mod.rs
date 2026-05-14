@@ -51,27 +51,6 @@ pub trait Trace {
         Self: Sized;
 }
 
-#[cfg(not(all(
-    any(
-        target_arch = "x86_64",
-        target_arch = "aarch64",
-        target_arch = "riscv64",
-        target_arch = "loongarch64"
-    ),
-    any(feature = "frame-pointer", feature = "framehop-unwinder")
-)))]
-mod backtrace_rs;
-#[cfg(not(all(
-    any(
-        target_arch = "x86_64",
-        target_arch = "aarch64",
-        target_arch = "riscv64",
-        target_arch = "loongarch64"
-    ),
-    any(feature = "frame-pointer", feature = "framehop-unwinder")
-)))]
-pub use backtrace_rs::Trace as TraceImpl;
-
 #[cfg(all(
     any(
         target_arch = "x86_64",
