@@ -58,7 +58,7 @@ pub trait Trace {
         target_arch = "riscv64",
         target_arch = "loongarch64"
     ),
-    any(feature = "frame-pointer", feature = "framehop-unwinder")
+    feature = "framehop-unwinder"
 )))]
 mod backtrace_rs;
 #[cfg(not(all(
@@ -68,30 +68,9 @@ mod backtrace_rs;
         target_arch = "riscv64",
         target_arch = "loongarch64"
     ),
-    any(feature = "frame-pointer", feature = "framehop-unwinder")
+    feature = "framehop-unwinder"
 )))]
 pub use backtrace_rs::Trace as TraceImpl;
-
-#[cfg(all(
-    any(
-        target_arch = "x86_64",
-        target_arch = "aarch64",
-        target_arch = "riscv64",
-        target_arch = "loongarch64"
-    ),
-    feature = "frame-pointer"
-))]
-pub mod frame_pointer;
-#[cfg(all(
-    any(
-        target_arch = "x86_64",
-        target_arch = "aarch64",
-        target_arch = "riscv64",
-        target_arch = "loongarch64"
-    ),
-    feature = "frame-pointer"
-))]
-pub use frame_pointer::Trace as TraceImpl;
 
 #[cfg(all(
     any(target_arch = "x86_64", target_arch = "aarch64",),

@@ -17,7 +17,6 @@ name = "pprof"  # keep Rust crate name as `pprof` so existing `use pprof::` code
 default = ["cpp"]
 cpp = ["symbolic-demangle/cpp"]
 flamegraph = ["inferno"]
-frame-pointer = []
 
 # A private feature to indicate either prost-codec or protobuf-codec is enabled.
 _protobuf = []
