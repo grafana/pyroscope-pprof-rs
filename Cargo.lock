@@ -774,7 +774,7 @@ dependencies = [
 
 [[package]]
 name = "pprof-pyroscope-fork"
-version = "0.1500.3"
+version = "0.1500.4"
 dependencies = [
  "aligned-vec",
  "arc-swap",
