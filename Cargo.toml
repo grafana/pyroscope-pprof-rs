@@ -45,7 +45,6 @@ inferno = { version = "0.11", default-features = false, features = ["nameattr"],
 prost = { version = "0.12", optional = true }
 prost-derive = { version = "0.12", optional = true }
 protobuf = { version = ">=3.7.2", optional = true }
-criterion = {version = "0.5", optional = true}
 aligned-vec = "0.6"
 
 # framehop unwinder dependencies
@@ -83,10 +82,6 @@ required-features = ["protobuf", "protobuf-codec"]
 [[example]]
 name = "multithread_flamegraph"
 required-features = ["flamegraph"]
-
-[[example]]
-name = "criterion"
-required-features = ["flamegraph", "criterion"]
 
 [[bench]]
 name = "collector"

@@ -93,6 +93,3 @@ pub mod protos {
 
     pub use self::profile::*;
 }
-
-#[cfg(feature = "criterion")]
-pub mod criterion;

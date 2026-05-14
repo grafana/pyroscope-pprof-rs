@@ -146,25 +146,6 @@ Then `pprof` will generate a svg file according to the profile.
 
 ![tree](https://user-images.githubusercontent.com/5244316/68571082-1f50ff80-049d-11ea-8437-211ab0d80480.png)
 
-## Integrate with `criterion`
-
-With `criterion` feature enabled, a criterion custom profiler is provided in `pprof-rs`.
-
-```rust
-use pprof::criterion::{PProfProfiler, Output};
-
-criterion_group!{
-    name = benches;
-    config = Criterion::default().with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
-    targets = bench
-}
-criterion_main!(benches);
-```
-
-After running the benchmark, you can find the flamegraph at `target/criterion/<name-of-benchmark>/profile/flamegraph.svg`. `protobuf` output is also available with the `Output::Protobuf` option; these end up at `target/criterion/<name-of-benchmark>/profile.pb`.
-
-For more details, you can check the [`examples/criterion.rs`](examples/criterion.rs), and the profiling document of [`criterion`](https://bheisler.github.io/criterion.rs/book/user_guide/profiling.html). For a quick start, you can run this example with `cargo run --example criterion --release --features="flamegraph criterion" -- --bench --profile-time 5`
-
 ## Why not ...
 
 There have been tons of profilers, why we create a new one? Here we make a comparison between `pprof-rs` and other popular profilers to help you choose the best fit one.
