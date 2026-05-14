@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1500.4](https://github.com/grafana/pyroscope-pprof-rs/compare/v0.1500.3...v0.1500.4) (2026-05-14)
+
+
+### Bug Fixes
+
+* enforce conventional commit format for PR titles ([#29](https://github.com/grafana/pyroscope-pprof-rs/issues/29)) ([35c4265](https://github.com/grafana/pyroscope-pprof-rs/commit/35c4265ee51b21cfa742aa95203c418a9956a5ce))
+
+
+### Miscellaneous Chores
+
+* update framehop to 0.16.0 ([#33](https://github.com/grafana/pyroscope-pprof-rs/issues/33)) ([c0f1ad5](https://github.com/grafana/pyroscope-pprof-rs/commit/c0f1ad5f432c94d0896a58b16dc17775bebac907))
+
+
+### Tests
+
+* add regression test for SIGPROF race crash in profiler start/stop cycles ([#26](https://github.com/grafana/pyroscope-pprof-rs/issues/26)) ([5651e99](https://github.com/grafana/pyroscope-pprof-rs/commit/5651e99c095d6f8f7de52edace3a4e6e52a2d3cb))
+
+
+### Continuous Integration
+
+* add release-please for automated releases and changelogs ([#27](https://github.com/grafana/pyroscope-pprof-rs/issues/27)) ([1aff4ef](https://github.com/grafana/pyroscope-pprof-rs/commit/1aff4ef4d4f4cabf377211434e4a775385d2f590))
+
 ## [0.15.0] - 202
 
 ### Added
